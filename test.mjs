@@ -24,16 +24,16 @@ test('conversation and tool results survive request preparation',()=>{
   assert.equal(value.schema.properties.tool_calls.minItems,1);
   assert.equal(value.schema.properties.tool_calls.maxItems,1);
 });
-test('unsupported attachments, models and Fast mode fail explicitly',()=>{
+test('invalid attachments, models and Fast mode fail explicitly',()=>{
   assert.throws(()=>prepareRequest({model:'other',input:[]}));
   assert.throws(()=>prepareRequest({model:'claude-subscription/sonnet',input:[{role:'user',content:[{type:'input_image',image_url:'test'}]}]}));
   assert.throws(()=>prepareRequest({model:'claude-subscription/sonnet',input:[],service_tier:'priority'}));
 });
-test('model picker keeps Claude aliases separate with no Fast or image capability',()=>{
+test('model picker keeps Claude aliases separate with image capability and no Fast mode',()=>{
   assert.equal(pickerModels(catalog).length,3);
   for(const m of pickerModels(catalog)){
     assert.ok(m.name.startsWith('claude-subscription/'));
-    assert.equal(m.supportsImages,false);
+    assert.equal(m.supportsImages,true);
     assert.equal(m.parameterDefinitions.some(p=>p.id==='fast'),false);
     assert.equal(m.variants.filter(v=>v.isDefaultNonMaxConfig).length,1);
   }

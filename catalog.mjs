@@ -14,17 +14,20 @@ export function sanitizeModels(models) {
   });
 }
 
-export function discoverModels(executable, {cwd, timeout=20000}={}) {
+export function discoverModels(executable, {cwd, timeout=20000, spawnProcess=spawn}={}) {
   return new Promise((resolve,reject) => {
-    const child=spawn(executable,['-p','--input-format','stream-json','--output-format','stream-json','--verbose',
+    const child=spawnProcess(executable,['-p','--input-format','stream-json','--output-format','stream-json','--verbose',
       '--tools','','--setting-sources','','--settings','{"disableAllHooks":true}',
       '--strict-mcp-config','--mcp-config','{"mcpServers":{}}','--no-chrome','--disable-slash-commands','--no-session-persistence'],
       {cwd,env:subscriptionEnvironment(),windowsHide:true,stdio:['pipe','pipe','pipe']});
-    let buffer='',settled=false;
-    const finish=(error,models)=>{if(settled)return;settled=true;clearTimeout(timer);child.kill();error?reject(error):resolve(models);};
+    let buffer='',settled=false,catalog;
+    const finish=(error,models)=>{if(settled)return;settled=true;clearTimeout(timer);if(error)child.kill();error?reject(error):resolve(models);};
     const timer=setTimeout(()=>finish(new Error('Claude model discovery timed out.')),timeout);
     child.on('error',()=>finish(new Error('Could not start Claude Code model discovery.')));
-    child.on('close',()=>finish(new Error('Claude model discovery ended without a catalog.')));
+    child.on('close',code=>{
+      if(catalog&&code===0)finish(null,catalog);
+      else finish(new Error('Claude model discovery ended without a clean catalog response.'));
+    });
     child.stdin.on('error',()=>{});child.stderr.resume();child.stdout.setEncoding('utf8');
     child.stdout.on('data',chunk=>{
       buffer+=chunk;if(buffer.length>1024*1024)return finish(new Error('Claude model catalog exceeded the size limit.'));
@@ -33,7 +36,12 @@ export function discoverModels(executable, {cwd, timeout=20000}={}) {
         const line=buffer.slice(0,newline);buffer=buffer.slice(newline+1);
         let value;try{value=JSON.parse(line);}catch{continue;}
         if(value.type==='control_response' && value.response?.request_id==='model-catalog'){
-          try{finish(null,sanitizeModels(value.response.response?.models));}catch(error){finish(error);}
+          try{
+            catalog=sanitizeModels(value.response.response?.models);
+            // Let Claude release its authentication locks before another CLI call.
+            // Killing immediately after initialize can interrupt its cleanup.
+            child.stdin.end();
+          }catch(error){finish(error);}
         }
       }
     });

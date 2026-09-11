@@ -38,3 +38,23 @@ npm run test:live
 ```
 
 This makes real requests and consumes usage. It requires a function call for adding two numbers, supplies the result and verifies the final reply. It does not edit workspace files. It tests the bridge, not the complete Cursor UI.
+
+## Reconnect regression check
+
+On September 11, 2026, the original `response.failed` behavior was reproduced against the installed Cursor 3.20.11 Responses adapters and incomplete-stream guards in both runtime bundles. The corrected bridge passed synthetic timeout, login and quota-error cases, and a successful function-call response. HTTP tests also verify cancellation and request-slot cleanup. These checks do not establish an SSH file-edit result.
+
+To run the installed adapter checks without model requests:
+
+```powershell
+npm run check:runtime -- "C:\path\to\Cursor\resources\app"
+```
+
+This reads supported installed code and exercises it with synthetic inputs. It does not modify the application or send network requests beyond loopback.
+
+Catalog discovery also passed a live check with a clean CLI exit. After the stream correction, the live tool-round-trip test exposed the OAuth refresh-lock error. A later official `claude auth status --json` call returned `loggedIn: false` and `authMethod: none`; a new local sign-in is required before live inference and SSH validation can finish. No live round-trip success is claimed for this repair.
+
+## Attachment support
+
+On September 11, 2026, the updated Sonnet adapter read the color of a generated PNG and a validation word embedded only in a PDF. Both passed through the running local subscription bridge. The standard function-call and tool-result round trip also passed with the new streaming JSON input format. Unit tests cover byte preservation, history references, multimodal tool results, UTF-8 documents, invalid data, URL handling and CLI result parsing. This supersedes the earlier text-only limitation. These bridge tests do not establish drag-and-drop coverage for every format or a new SSH UI test.
+
+The implementation follows [Claude SDK streaming input](https://code.claude.com/docs/en/agent-sdk/streaming-vs-single-mode) and [Claude PDF content blocks](https://platform.claude.com/docs/en/build-with-claude/pdf-support).

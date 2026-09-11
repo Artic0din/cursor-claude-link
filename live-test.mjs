@@ -11,7 +11,7 @@ async function infer(body){
   const res=await fetch(base+'/v1/responses',{method:'POST',headers,body:JSON.stringify({model:'claude-subscription/'+(process.env.CLAUDE_TEST_MODEL||'sonnet'),...body}),signal:AbortSignal.timeout(180000)});
   assert.equal(res.status,200);
   const events=(await res.text()).split('\n').filter(l=>l.startsWith('data: ')).map(l=>JSON.parse(l.slice(6)));
-  const failed=events.find(e=>e.type==='response.failed');assert.equal(failed,undefined,failed?.response?.error?.message);
+  const failed=events.find(e=>e.type==='error'||e.type==='response.failed');assert.equal(failed,undefined,failed?.message||failed?.response?.error?.message);
   const done=events.find(e=>e.type==='response.completed');assert.ok(done);return done.response.output;
 }
 const tools=[{type:'function',name:'add',description:'Add two integers',parameters:{type:'object',properties:{a:{type:'integer'},b:{type:'integer'}},required:['a','b'],additionalProperties:false}}];

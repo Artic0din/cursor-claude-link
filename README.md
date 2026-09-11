@@ -127,11 +127,27 @@ Anthropic's [Agent SDK support notice](https://support.claude.com/en/articles/15
 
 In particular, [Fable can use usage credits on some plans](https://code.claude.com/docs/en/model-config#fable-and-usage-credits), and non-interactive Claude Code does not show the interactive billing-consent prompt. Check your account's usage settings before using it.
 
-- Fast mode, image inputs, voice and image generation are not implemented.
+- Fast mode, voice and image generation are not implemented.
 - Ultracode is not an effort level above Max. It combines xhigh reasoning with Claude Code's dynamic workflow orchestration. That orchestration is not implemented in this Cursor adapter, so no misleading Ultracode option is shown. See [Claude's model configuration](https://code.claude.com/docs/en/model-config#adjust-effort-level).
 - Initial model entries are embedded during installation. A failed catalog refresh can leave stale entries visible; the provider still decides whether a request is accepted.
 - Claude Code authentication, catalog and usage behavior can change separately from Cursor. A refresh-lock error can require retrying later or signing in again through Claude Code.
 - Cloud agents, macOS and Linux clients are unsupported. Separate manual coverage of both Cursor windows and SSH is still needed.
+
+## Reconnecting or failed requests
+
+Claude CLI errors now use the error event understood by Cursor's Responses adapter. Earlier bridge versions sent `response.failed`, which Cursor 3.20.11 ignored and treated as an interrupted stream. This could hide login, usage-limit or timeout errors behind repeated reconnect attempts. The correction reports the original error; it does not resolve an expired login, exhausted usage or a broken SSH connection.
+
+Model discovery now closes the Claude CLI input stream and waits for a clean exit before returning the catalog, so it no longer kills a successful discovery process during cleanup. If Claude reports a missing sign-in, run `claude auth login --claudeai` locally, then retry the request.
+
+The local `.state/bridge-status.json` file records up to 40 request lifecycle entries with model, timestamp, duration and outcome. It contains no prompts, tool arguments, credentials or error text. The file is ignored by Git.
+
+## Attachments
+
+Images (PNG, JPEG, GIF and WebP) and PDFs are sent to Claude Code as native content blocks through streaming JSON input. UTF-8 text attachments, including Markdown, CSV and JSON, are sent as text documents. Attachments retain their position in the conversation and can also be included in tool results. The bridge does not place base64 file data in the text prompt or read local paths from attachment URLs.
+
+Both workbenches advertise image support. Cursor decides how files are attached or extracted before a request reaches the bridge. Other binary formats, audio, video and provider-specific file IDs are not supported by this Claude adapter. Attach file contents, an HTTP(S) URL, or extracted text. The bridge accepts requests up to 64 MiB including JSON and base64 overhead; Claude's own file, page and context limits still apply.
+
+Run `npm run test:attachments` against the running bridge for a real image and PDF content check. It consumes subscription usage.
 
 ## Development
 

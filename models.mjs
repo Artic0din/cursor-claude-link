@@ -14,9 +14,9 @@ export function pickerModels(catalog) {
     const defaultEffort=efforts.includes('medium')?'medium':efforts[0];
     const contexts=model.extended?[200000,1000000]:[200000];
     const tooltip=context=>({primaryText:name,secondaryText:model.summary,secondaryWarningText:false,icon:'',tertiaryText:'',tertiaryTextUrl:'',
-      markdownContent:model.summary+'\n\nContext: '+(context===1000000?'1 million':'200,000')+' tokens.\n\nUses your local Claude Code sign-in. Supports text and Cursor tools.'});
+      markdownContent:model.summary+'\n\nContext: '+(context===1000000?'1 million':'200,000')+' tokens.\n\nUses your local Claude Code sign-in. Supports text, images, PDF documents and Cursor tools.'});
     return {name:id,serverModelName:id,clientDisplayName:name,inputboxShortModelName:name,
-      defaultOn:true,supportsAgent:true,supportsImages:false,supportsThinking:efforts.length>0,
+      defaultOn:true,supportsAgent:true,supportsImages:true,supportsThinking:efforts.length>0,
       supportsNonMaxMode:true,supportsMaxMode:false,supportsPlanMode:true,supportsAutoContext:true,
       contextTokenLimit:contexts.at(-1),autoContextMaxTokens:contexts.at(-1),namedModelSectionIndex:0,
       vendorName:'anthropic',vendor:{id:1,displayName:'Anthropic'},modelPickerBadges:[],cloudAgentEffortModes:[],tagline:model.summary,tooltipData:tooltip(200000),

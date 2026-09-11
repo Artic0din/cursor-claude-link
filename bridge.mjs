@@ -8,15 +8,13 @@ import {pickerModels, providerModels} from './models.mjs';
 import {createCatalog} from './catalog.mjs';
 import {createUsage} from './usage.mjs';
 
-const dir = path.dirname(fileURLToPath(import.meta.url));
-const config = JSON.parse(fs.readFileSync(path.join(dir,'config.json'),'utf8'));
-const getCatalog = createCatalog(config.claude,{cwd:dir});
-const getUsage = createUsage(config.claude,{cwd:dir});
+export function createHandler({config, cwd:dir, getCatalog, getUsage,
+  inferRequest=infer, readAccount=requireSubscription, report=()=>{}}) {
 const json = (res,status,body) => { res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(body)); };
 const id = prefix => prefix+'_'+crypto.randomUUID().replaceAll('-','');
 let active = 0;
 
-async function handle(req,res) {
+return async function handle(req,res) {
   try {
     const origin = req.headers.origin;
     if (origin && !['null','vscode-file://vscode-app'].includes(origin)) return json(res,403,{error:{message:'Origin not allowed'}});
@@ -27,14 +25,14 @@ async function handle(req,res) {
     if (pathname==='/health') return json(res,200,{ok:true,provider:'claude-subscription',active});
     if (pathname==='/picker-models') return json(res,200,{models:pickerModels(await getCatalog())});
     if (pathname==='/v1/models') return json(res,200,{object:'list',data:providerModels(await getCatalog())});
-    if (pathname==='/account') return json(res,200,await requireSubscription(config.claude,{cwd:dir}));
+    if (pathname==='/account') return json(res,200,await readAccount(config.claude,{cwd:dir}));
     if (req.method==='GET'&&(pathname==='/usage'||pathname==='/v1/usage')) {
       try { return json(res,200,await getUsage()); }
       catch (error) { return json(res,502,{error:{message:error.message||'Usage data unavailable.'}}); }
     }
     if (req.method!=='POST'||pathname!=='/v1/responses') return json(res,404,{error:{message:'Unsupported route: '+req.method+' '+pathname}});
     if (active>=2) return json(res,503,{error:{message:'Two Claude requests are already running. Please wait.'}});
-    req.setEncoding('utf8');let text='';for await (const chunk of req) {text+=chunk;if(Buffer.byteLength(text)>12*1024*1024)throw new Error('Request too large.');}
+    req.setEncoding('utf8');let text='';for await (const chunk of req) {text+=chunk;if(Buffer.byteLength(text)>64*1024*1024)throw new Error('Request exceeds the 64 MiB bridge limit. Send fewer or smaller attachments.');}
     const body=JSON.parse(text),catalog=await getCatalog();prepareRequest(body,catalog);
     const abort=new AbortController();res.on('close',()=>{if(!res.writableEnded)abort.abort();});
     const response={id:id('resp'),object:'response',created_at:Math.floor(Date.now()/1000),model:body.model,status:'in_progress',output:[]};
@@ -44,8 +42,11 @@ async function handle(req,res) {
     event('response.created',{response});
     const timer=setInterval(()=>{if(!res.destroyed)res.write(': waiting for Claude Code\n\n');},10000);
     active++;
+    const started=Date.now();
+    const record=status=>{try{report({id:response.id,model:body.model,status,durationMs:Date.now()-started,at:new Date().toISOString()});}catch{}};
+    record('started');
     try {
-      const {answer,usage}=await infer(config.claude,body,{signal:abort.signal,cwd:dir,catalog});
+      const {answer,usage}=await inferRequest(config.claude,body,{signal:abort.signal,cwd:dir,catalog});
       const output=[];
       if(answer.text){
         const item={id:id('msg'),type:'message',role:'assistant',status:'in_progress',content:[]};
@@ -70,11 +71,39 @@ async function handle(req,res) {
       const outputTokens=usage?.output_tokens||0;
       event('response.completed',{response:{...response,status:'completed',output,usage:{input_tokens:inputTokens,output_tokens:outputTokens,total_tokens:inputTokens+outputTokens}}});
       res.end();
+      record('completed');
     } catch(error) {
-      if(!res.destroyed){event('response.failed',{response:{...response,status:'failed',error:{code:'claude_request_failed',message:error.message}}});res.end();}
+      record(abort.signal.aborted?'cancelled':'failed');
+      if(!res.destroyed){
+        // Cursor's Responses adapter ignores response.failed. An error event
+        // preserves the CLI error instead of triggering incomplete-stream retries.
+        event('error',{code:'claude_request_failed',message:error.message||'Claude Code rejected the request.',param:null});
+        res.end();
+      }
     } finally {active--;clearInterval(timer);}
   }catch(error){if(res.headersSent)res.destroy();else json(res,400,{error:{message:error.message}});}
+};
 }
+
+export function startBridge() {
+const dir=path.dirname(fileURLToPath(import.meta.url));
+const config=JSON.parse(fs.readFileSync(path.join(dir,'config.json'),'utf8'));
+const records=[];
+const report=record=>{
+  records.push(record);
+  if(records.length>40)records.shift();
+  const state=path.join(dir,'.state');
+  fs.mkdirSync(state,{recursive:true});
+  // Only request IDs, model IDs, timestamps and outcomes. No prompts or credentials.
+  fs.writeFileSync(path.join(state,'bridge-status.json'),JSON.stringify(records,null,2)+'\n');
+};
+const handle=createHandler({config,cwd:dir,getCatalog:createCatalog(config.claude,{cwd:dir}),
+  getUsage:createUsage(config.claude,{cwd:dir}),report});
 const server=http.createServer(handle);
 server.on('error',error=>{console.error('Claude bridge could not listen: '+error.code);process.exit(1);});
 server.listen(config.port,'127.0.0.1',()=>console.log('Claude subscription bridge ready.'));
+
+return server;
+}
+
+if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url))startBridge();
