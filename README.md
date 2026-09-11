@@ -139,7 +139,7 @@ Claude CLI errors now use the error event understood by Cursor's Responses adapt
 
 Model discovery now closes the Claude CLI input stream and waits for a clean exit before returning the catalog, so it no longer kills a successful discovery process during cleanup. If Claude reports a missing sign-in, run `claude auth login --claudeai` locally, then retry the request.
 
-The local `.state/bridge-status.json` file records up to 40 request lifecycle entries with model, timestamp, duration and outcome. It contains no prompts, tool arguments, credentials or error text. The file is ignored by Git.
+The local `.state/bridge-status.json` file records up to 40 request lifecycle entries with model, timestamp, duration, outcome and numeric usage diagnostics. It contains no prompts, tool arguments, credentials or error text. The file is ignored by Git.
 
 ## Attachments
 
@@ -148,6 +148,12 @@ Images (PNG, JPEG, GIF and WebP) and PDFs are sent to Claude Code as native cont
 Both workbenches advertise image support. Cursor decides how files are attached or extracted before a request reaches the bridge. Other binary formats, audio, video and provider-specific file IDs are not supported by this Claude adapter. Attach file contents, an HTTP(S) URL, or extracted text. The bridge accepts requests up to 64 MiB including JSON and base64 overhead; Claude's own file, page and context limits still apply.
 
 Run `npm run test:attachments` against the running bridge for a real image and PDF content check. It consumes subscription usage.
+
+## Context usage
+
+Cursor receives the input token count from the last Claude model step, including cache reads and writes. Earlier bridge versions reported the cumulative input usage of all internal steps, which could make a short conversation appear to fill the context window. Duplicate message IDs and subagent usage are excluded from this calculation. Older CLI versions without final per-step output counts use the turn output total as a conservative fallback.
+
+An existing conversation keeps its saved context value until the next successful response. The local diagnostics include token counts, prompt character count, attachment count and embedded image-data character count, without storing prompt or attachment contents.
 
 ## Development
 

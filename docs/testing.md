@@ -58,3 +58,11 @@ Catalog discovery also passed a live check with a clean CLI exit. After the stre
 On September 11, 2026, the updated Sonnet adapter read the color of a generated PNG and a validation word embedded only in a PDF. Both passed through the running local subscription bridge. The standard function-call and tool-result round trip also passed with the new streaming JSON input format. Unit tests cover byte preservation, history references, multimodal tool results, UTF-8 documents, invalid data, URL handling and CLI result parsing. This supersedes the earlier text-only limitation. These bridge tests do not establish drag-and-drop coverage for every format or a new SSH UI test.
 
 The implementation follows [Claude SDK streaming input](https://code.claude.com/docs/en/agent-sdk/streaming-vs-single-mode) and [Claude PDF content blocks](https://platform.claude.com/docs/en/build-with-claude/pdf-support).
+
+## Context token accounting
+
+The context correction passed 28 unit tests and the installed Cursor 3.20.11 runtime checks. A synthetic three-step turn with 200,000 cumulative input tokens reports the final 69,000-token prompt instead of the cumulative total. Coverage includes repeated message IDs, subagents, cached tokens, separate result boundaries and output-count fallbacks.
+
+In a live Claude Opus check on September 11, 2026, two visually identical 512 by 512 PNGs of 1,497 and 787,127 bytes both used 1,794 input tokens and 79 output tokens. Both were understood correctly. This checks that image encoding size does not turn into text-token occupancy. The affected existing conversation still needs a new response to refresh its saved UI value.
+
+See [Claude SDK usage scopes](https://code.claude.com/docs/en/agent-sdk/cost-tracking) for the distinction between per-step input usage and cumulative turn usage.

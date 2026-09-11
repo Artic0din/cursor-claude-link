@@ -1,4 +1,5 @@
 import {spawn} from 'node:child_process';
+import {parseResultStream} from './token-usage.mjs';
 import {prepareConversation,cliInput} from './attachments.mjs';
 import {modelOptions,stripContext} from './model-options.mjs';
 
@@ -45,7 +46,7 @@ export function runCli(executable, args, {input = '', signal, cwd, timeout = 180
     child.stderr.on('data', chunk => { stderr = (stderr + chunk.toString()).slice(-4096); });
     child.on('close', code => {
       let value;
-      try { value = streamJson ? stdout.split('\n').filter(line=>line.trim()).map(line=>JSON.parse(line)).findLast(item=>item.type==='result') : JSON.parse(stdout); if(!value)throw new Error('Missing result'); } catch { return finish(new Error('Claude Code did not return valid JSON. ' + stderr.slice(-500))); }
+      try { value = streamJson ? parseResultStream(stdout) : JSON.parse(stdout); if(!value)throw new Error('Missing result'); } catch { return finish(new Error('Claude Code did not return valid JSON. ' + stderr.slice(-500))); }
       if (value.loggedIn === false && value.authMethod === 'none') return finish(new Error('A Claude subscription sign-in is required. Run claude auth login --claudeai. API billing fallback is disabled.'));
       if (code !== 0 || value.is_error) return finish(new Error(String(value.errors?.join('; ') || value.result || 'Claude Code rejected the request.').slice(0,1000)));
       finish(undefined, value);
@@ -112,5 +113,8 @@ export async function infer(executable, body, options = {}) {
     let args; try { args = JSON.parse(call.arguments); } catch { throw new Error('Claude returned invalid tool arguments.'); }
     if (!args || typeof args !== 'object' || Array.isArray(args)) throw new Error('Tool arguments must be an object.');
   }
-  return {answer, usage:result.usage};
+  if(!result.contextUsage)throw new Error('Claude Code did not report per-step context usage.');
+  return {answer, usage:result.contextUsage, usageDiagnostics:{...result.usageDiagnostics,
+    promptCharacters:request.prompt.length,attachmentCount:request.attachments.length,
+    embeddedImageDataCharacters:[...request.prompt.matchAll(/data:image\/[^;,]+;base64,([A-Za-z0-9+/=]+)/g)].reduce((sum,match)=>sum+match[1].length,0)}};
 }

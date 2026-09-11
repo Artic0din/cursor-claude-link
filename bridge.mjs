@@ -1,4 +1,5 @@
 import http from 'node:http';
+import {responsesUsage} from './token-usage.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
@@ -43,10 +44,10 @@ return async function handle(req,res) {
     const timer=setInterval(()=>{if(!res.destroyed)res.write(': waiting for Claude Code\n\n');},10000);
     active++;
     const started=Date.now();
-    const record=status=>{try{report({id:response.id,model:body.model,status,durationMs:Date.now()-started,at:new Date().toISOString()});}catch{}};
+    const record=(status,usage)=>{try{report({id:response.id,model:body.model,status,durationMs:Date.now()-started,at:new Date().toISOString(),...(usage?{usage}: {})});}catch{}};
     record('started');
     try {
-      const {answer,usage}=await inferRequest(config.claude,body,{signal:abort.signal,cwd:dir,catalog});
+      const {answer,usage,usageDiagnostics}=await inferRequest(config.claude,body,{signal:abort.signal,cwd:dir,catalog});
       const output=[];
       if(answer.text){
         const item={id:id('msg'),type:'message',role:'assistant',status:'in_progress',content:[]};
@@ -67,11 +68,9 @@ return async function handle(req,res) {
         event('response.function_call_arguments.done',{item_id:item.id,output_index:index,arguments:call.arguments});
         event('response.output_item.done',{output_index:index,item});
       }
-      const inputTokens=(usage?.input_tokens||0)+(usage?.cache_read_input_tokens||0)+(usage?.cache_creation_input_tokens||0);
-      const outputTokens=usage?.output_tokens||0;
-      event('response.completed',{response:{...response,status:'completed',output,usage:{input_tokens:inputTokens,output_tokens:outputTokens,total_tokens:inputTokens+outputTokens}}});
+      event('response.completed',{response:{...response,status:'completed',output,usage:responsesUsage(usage)}});
       res.end();
-      record('completed');
+      record('completed',usageDiagnostics);
     } catch(error) {
       record(abort.signal.aborted?'cancelled':'failed');
       if(!res.destroyed){
