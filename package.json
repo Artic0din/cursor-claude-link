@@ -1,0 +1,31 @@
+{
+  "name": "cursor-claude-link",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Use local Claude Code subscription models in the Cursor agent harness",
+  "scripts": {
+    "doctor": "node doctor.mjs",
+    "test": "node --test test.mjs",
+    "test:live": "node live-test.mjs",
+    "install:patch": "node patcher.mjs install",
+    "uninstall": "node patcher.mjs restore",
+    "restore": "node patcher.mjs restore",
+    "start": "node bridge.mjs",
+    "check": "node patcher.mjs check",
+    "status": "node patcher.mjs status",
+    "install-patch": "node patcher.mjs install",
+    "check:source": "node scripts/check-source.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vertexitde/cursor-claude-link.git"
+  },
+  "bugs": {
+    "url": "https://github.com/vertexitde/cursor-claude-link/issues"
+  }
+}
