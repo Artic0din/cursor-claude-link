@@ -19,7 +19,7 @@ export function linkedGptManifests() {
 export function getBuild(root) {
   if(process.platform!=='win32'||process.arch!=='x64')throw new Error('Only Windows x64 clients are supported.');
   const version=JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8')).version;
-  if(!['3.20.7','3.20.11'].includes(version))throw new Error('Unsupported Cursor version: '+version);
+  if(!['3.20.7','3.20.11','3.20.17'].includes(version))throw new Error('Unsupported Cursor version: '+version);
   const build=JSON.parse(fs.readFileSync(new URL('./build-'+version+'.json',import.meta.url),'utf8'));
   if(JSON.parse(fs.readFileSync(path.join(root,'product.json'),'utf8')).commit!==build.commit)throw new Error('Unsupported Cursor commit.');
   return build;

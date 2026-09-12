@@ -4,12 +4,19 @@
 
 | Version | Commit | Platform |
 | --- | --- | --- |
+| 3.20.17 | `0c32194e3fb5ffaced9fb36430b860ec301e1fc0` | Windows x64 |
 | 3.20.11 | `69d099d6568dc97e110ba8184614faf51c4040b0` | Windows x64 |
 | 3.20.7 | `979197d5570b168c034c634b3e21f2bea3ea5be0` | Windows x64 |
 
 The build JSON files record SHA-256 hashes of original JavaScript bundles. Version-specific installers also require unique patch anchors and run Node.js syntax checks before writing application files. Existing GPT installations are accepted only through a matching local installation manifest.
 
 The public source check and unit tests do not require Cursor or Claude sign-in. They cover environment handling, model and context mapping, function-call preparation, usage parsing, picker sections and exact bridge-process matching. CI runs these on Windows with Node.js 22 and 24. Local verification used Node.js 26.7.0; CI results are separate evidence.
+
+## Cursor 3.20.17 update
+
+On September 12, 2026, the desktop and Agents Window model mapping, picker rendering, usage components and dedicated-runtime symbols were updated for this exact build. The new metadata also verifies the original `product.json`. All 28 unit tests, source checks and both native Responses adapter checks passed. The adapter checks cover timeout, sign-in and quota errors, plus a successful function call.
+
+Standalone Claude and combined ChatGPT/Claude installations passed syntax and unique-anchor checks on a separate local copy. Both native workbench routing methods retained SSH workspace execution resources and cancellation signals. Every supported effort value was checked with both 200K and 1M forwarding. Both patches were then installed locally, and all installation, linked-manifest and backup hashes matched. These are automated checks; a new manual IDE, Agents Window and SSH test is still pending.
 
 ## Manual and live checks
 

@@ -9,8 +9,9 @@ Companion project: [cursor-gpt-link](https://github.com/vertexitde/cursor-gpt-li
 | Item | Current status |
 | --- | --- |
 | Client platform | Windows x64 |
-| Latest tested Cursor | 3.20.11, September 11, 2026 |
-| Cursor commit | `69d099d6568dc97e110ba8184614faf51c4040b0` |
+| Latest tested Cursor | 3.20.17, September 12, 2026; automated checks |
+| Cursor commit | `0c32194e3fb5ffaced9fb36430b860ec301e1fc0` |
+| Supported Cursor 3.20.11 | Commit `69d099d6568dc97e110ba8184614faf51c4040b0` |
 | Previous supported Cursor | 3.20.7, commit `979197d5570b168c034c634b3e21f2bea3ea5be0` |
 | Node.js used locally | 26.7.0 |
 | Claude Code used locally | 2.1.263, signed in with Claude Max |
@@ -22,7 +23,7 @@ Companion project: [cursor-gpt-link](https://github.com/vertexitde/cursor-gpt-li
 | Subscription usage | Settings card implemented; retrieval can be unavailable |
 | Fast and Ultracode | Not implemented |
 
-The automated Claude inference check after the 3.20.11 update encountered an OAuth refresh-lock error. A separate manual test confirmed model selection and a file edit, but did not specify which provider was selected. See [testing notes](docs/testing.md) for the exact coverage.
+Cursor 3.20.17 passed syntax, anchor, SSH routing, context and effort forwarding, and native stream-adapter checks. Standalone Claude and combined ChatGPT/Claude installations were verified on a separate local copy. A fresh manual UI test is pending for this build. Earlier live attachment and tool-call checks are documented separately. See [testing notes](docs/testing.md) for the exact coverage.
 
 Only the listed builds are supported. The installer checks version, commit, original JavaScript hashes and patch anchors. A matching local ChatGPT installation manifest can identify already patched files. Unknown changes stop installation.
 
