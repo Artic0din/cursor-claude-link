@@ -14,7 +14,7 @@ export function pickerModels(catalog) {
     const defaultEffort=efforts.includes('medium')?'medium':efforts[0];
     const contexts=model.extended?[200000,1000000]:[200000];
     const tooltip=context=>({primaryText:name,secondaryText:model.summary,secondaryWarningText:false,icon:'',tertiaryText:'',tertiaryTextUrl:'',
-      markdownContent:model.summary+'\n\nContext: '+(context===1000000?'1 million':'200,000')+' tokens.\n\nUses your local Claude Code sign-in. Supports text, images, PDF documents and Cursor tools.'});
+      markdownContent:model.summary+'\n\nContext: '+(context===1000000?'1 million':'200,000')+' tokens.'});
     return {name:id,serverModelName:id,clientDisplayName:name,inputboxShortModelName:name,
       defaultOn:true,supportsAgent:true,supportsImages:true,supportsThinking:efforts.length>0,
       supportsNonMaxMode:true,supportsMaxMode:false,supportsPlanMode:true,supportsAutoContext:true,
