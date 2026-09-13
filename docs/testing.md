@@ -73,3 +73,21 @@ The context correction passed 28 unit tests and the installed Cursor 3.20.11 run
 In a live Claude Opus check on September 11, 2026, two visually identical 512 by 512 PNGs of 1,497 and 787,127 bytes both used 1,794 input tokens and 79 output tokens. Both were understood correctly. This checks that image encoding size does not turn into text-token occupancy. The affected existing conversation still needs a new response to refresh its saved UI value.
 
 See [Claude SDK usage scopes](https://code.claude.com/docs/en/agent-sdk/cost-tracking) for the distinction between per-step input usage and cumulative turn usage.
+
+
+## Local Claude subagent startup
+
+On September 13, 2026, the missing parent Task bubble reported for ChatGPT was also reproduced with a Claude model ID in Cursor 3.20.17's native desktop and Agents Window registration methods. This was a controlled reproduction, not a recorded Claude SSH session failure.
+
+The Claude patch now creates a missing Task bubble through Cursor's existing ToolFormer method when both the request and the loaded parent use Claude subscription models. Existing bubbles, cancellation and the normal registration barrier are preserved. Missing parents or capabilities still fail through the original path.
+
+All 36 Claude unit tests passed. Native registration checks passed for standalone Claude and combined ChatGPT/Claude candidates in both workbenches. Combined installation and uninstall checks verified linked manifests, backups and byte-for-byte restoration of the original build. A completed live subagent task in the SSH Agents Window still needs manual confirmation.
+
+Run the check:subagents npm script with the patched Cursor resources/app path to repeat the native registration check without model requests.
+
+
+### Empty optional model on the first attempt
+
+The later ChatGPT SSH session contained a separate failure after reload: Task calls supplied an empty model string and failed native validation. The next attempts selected a model successfully and started local subagents. This confirms successful startup after retries, not reliable first-attempt behavior before the additional repair.
+
+For this subscription provider, an empty or whitespace-only requested model is now normalized to an omitted selection before the native resolver runs. Cursor still chooses the inherited, configured or forced model and checks availability. Explicit models and other providers retain native validation. Both runtime resolvers passed a reproduced empty-string failure, inheritance, configured defaults, forced-model handling and blocked-model checks. A new live test of the first attempt after this additional repair is still pending.

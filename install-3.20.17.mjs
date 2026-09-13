@@ -1,3 +1,5 @@
+import {patchSubagentModel} from './subagent-model.mjs';
+import {patchSubagentBubbles} from './subagent-bubbles.mjs';
 import {cursorRoot,linkedGptManifests,requireSupportedOriginals} from './build-support.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -101,6 +103,7 @@ for(const surface of ['desktop','glass']){
   source=once(source,usage.fn,usageSectionSrc(usage)+usage.fn);
   const usageChildren=source.includes(usage.childrenGpt)?usage.childrenGpt:usage.children;
   source=once(source,usageChildren,usageChildren.slice(0,-1)+','+usage.jsx+'(__claudeUsageSection,{})]');
+  source=patchSubagentBubbles(source,surface);
   pending.push({path:target,content:source});
 }
 for(const name of ['cursor-agent-exec','cursor-local-agent-runtime']){
@@ -111,6 +114,7 @@ for(const name of ['cursor-agent-exec','cursor-local-agent-runtime']){
   const heuristic='n.includes("codex")?"responses":"chat_completions"';
   const claudeHeuristic='n.includes("codex")||n.startsWith("claude-subscription/")?"responses":"chat_completions"';
   if(!source.includes(claudeHeuristic))source=once(source,heuristic,claudeHeuristic);
+  source=patchSubagentModel(source);
   pending.push({path:target,content:source});
 }
 const main=path.join(root,'out/main.js');
