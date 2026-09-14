@@ -9,8 +9,8 @@ Companion project: [cursor-gpt-link](https://github.com/vertexitde/cursor-gpt-li
 | Item | Current status |
 | --- | --- |
 | Client platform | Windows x64 |
-| Latest tested Cursor | 3.20.17, September 12, 2026; automated checks |
-| Cursor commit | `0c32194e3fb5ffaced9fb36430b860ec301e1fc0` |
+| Latest tested Cursor | 3.20.21, September 14, 2026; automated checks |
+| Cursor commit | `f09fca384ceca23f7bf21f9c23655b162641d740` |
 | Supported Cursor 3.20.11 | Commit `69d099d6568dc97e110ba8184614faf51c4040b0` |
 | Previous supported Cursor | 3.20.7, commit `979197d5570b168c034c634b3e21f2bea3ea5be0` |
 | Node.js used locally | 26.7.0 |
@@ -23,11 +23,11 @@ Companion project: [cursor-gpt-link](https://github.com/vertexitde/cursor-gpt-li
 | Subscription usage | Settings card implemented; retrieval can be unavailable |
 | Fast and Ultracode | Not implemented |
 
-Cursor 3.20.17 passed syntax, anchor, SSH routing, context and effort forwarding, and native stream-adapter checks. Standalone Claude and combined ChatGPT/Claude installations were verified on a separate local copy. A fresh manual UI test is pending for this build. Earlier live attachment and tool-call checks are documented separately. See [testing notes](docs/testing.md) for the exact coverage.
+Cursor 3.20.21 passed syntax, anchor, SSH routing, context and effort forwarding, and native stream-adapter checks. Standalone Claude and combined ChatGPT/Claude installations were verified on a separate local copy. A fresh manual UI test is pending for this build. Earlier live attachment and tool-call checks are documented separately. See [testing notes](docs/testing.md) for the exact coverage.
 
 Only the listed builds are supported. The installer checks version, commit, original JavaScript hashes and patch anchors. A matching local ChatGPT installation manifest can identify already patched files. Unknown changes stop installation.
 
-On Cursor 3.20.17, local subscription subagents also receive a missing parent Task entry before Cursor waits for its registration. The repair passed automated checks in both workbenches; a completed SSH subagent task still needs manual confirmation. See the testing notes for details.
+On Cursor 3.20.17 and 3.20.21, local subscription subagents also receive a missing parent Task entry before Cursor waits for its registration. The repair passed automated checks in both workbenches; a completed SSH subagent task still needs manual confirmation. See the testing notes for details.
 
 ## What it adds
 

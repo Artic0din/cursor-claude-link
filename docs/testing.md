@@ -4,6 +4,7 @@
 
 | Version | Commit | Platform |
 | --- | --- | --- |
+| 3.20.21 | `f09fca384ceca23f7bf21f9c23655b162641d740` | Windows x64 |
 | 3.20.17 | `0c32194e3fb5ffaced9fb36430b860ec301e1fc0` | Windows x64 |
 | 3.20.11 | `69d099d6568dc97e110ba8184614faf51c4040b0` | Windows x64 |
 | 3.20.7 | `979197d5570b168c034c634b3e21f2bea3ea5be0` | Windows x64 |
@@ -11,6 +12,23 @@
 The build JSON files record SHA-256 hashes of original JavaScript bundles. Version-specific installers also require unique patch anchors and run Node.js syntax checks before writing application files. Existing GPT installations are accepted only through a matching local installation manifest.
 
 The public source check and unit tests do not require Cursor or Claude sign-in. They cover environment handling, model and context mapping, function-call preparation, usage parsing, picker sections and exact bridge-process matching. CI runs these on Windows with Node.js 22 and 24. Local verification used Node.js 26.7.0; CI results are separate evidence.
+
+## Cursor 3.20.21 update
+
+On September 14, 2026, the patch anchors and referenced symbols were reviewed against Cursor commit `f09fca384ceca23f7bf21f9c23655b162641d740`. The model mapper, picker renderer, usage components, dedicated-runtime activation and Task bubble parameters have new identifiers. Version-specific definitions preserve support for the preceding builds.
+
+The following checks passed against local copies of the exact new bundles:
+
+- Unique patch anchors and JavaScript syntax in both workbenches, both agent runtimes and the main process.
+- Native SSH routing with workspace execution resources and cancellation preserved.
+- Reasoning and Fast forwarding for ChatGPT, and effort plus 200K/1M context forwarding for Claude.
+- Native subagent registration and model inheritance, including reproductions of the missing Task bubble and empty model failures.
+- Both native Responses adapters with timeout, sign-in and quota errors, plus a successful tool call. The probe now accepts native identifiers containing a dollar sign.
+- Standalone Claude, standalone ChatGPT, and combined installations; linked hashes and exact restoration of the original files after uninstall.
+
+Both patches were installed locally after those checks. Installed-file and backup hashes matched. The ChatGPT native build checks and Claude Responses-adapter checks were also repeated successfully against Cursor 3.20.17. These are controlled automated checks; a fresh manual IDE, Agents Window and SSH test remains pending for 3.20.21.
+
+The reviewed 3.20.21 hashes are in [the build metadata](../build-3.20.21.json).
 
 ## Cursor 3.20.17 update
 

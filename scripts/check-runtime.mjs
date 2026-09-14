@@ -14,14 +14,14 @@ async function consume(source,events){
   const end=source.indexOf('warnings:n}}}',pivot)+'warnings:n}}'.length;
   assert.ok(start>=0&&end>start,'Supported Responses adapter found');
   const method=source.slice(start,end);
-  const helper=method.match(/i=(\w+)\(\{finishReason:/)[1];
+  const helper=method.match(/i=([$\w]+)\(\{finishReason:/)[1];
   const helperStart=source.indexOf('function '+helper+'(');
   const helperEnd=source.indexOf('var ',helperStart);
   const guardPivot=source.indexOf('Provider stream ended without a terminal finish reason');
   const guardStart=source.lastIndexOf('class ',guardPivot);
   const guardEnd=source.indexOf('}})}',guardStart)+4;
   assert.ok(helperStart>=0&&helperEnd>helperStart&&guardStart>=0&&guardEnd>guardStart,'Supported stream guard found');
-  const names=[method.match(/value:o\}=await (\w+)\(/)[1],method.match(/headers:(\w+)\(/)[1],method.match(/failedResponseHandler:(\w+)/)[1],...method.match(/successfulResponseHandler:(\w+)\((\w+)\)/).slice(1)];
+  const names=[method.match(/value:o\}=await ([$\w]+)\(/)[1],method.match(/headers:([$\w]+)\(/)[1],method.match(/failedResponseHandler:([$\w]+)/)[1],...method.match(/successfulResponseHandler:([$\w]+)\(([$\w]+)\)/).slice(1)];
   const provider=new Function(...names,source.slice(helperStart,helperEnd)+'return ({'+method+'});')(
     async()=>({value:ReadableStream.from(events.map(value=>({success:true,value})))}),()=>({}),{},()=>{},{});
   provider.getArgs=()=>({args:{},warnings:[]});provider.config={url:()=>'',headers:()=>({})};
@@ -30,8 +30,8 @@ async function consume(source,events){
       if(result.done)resolve(result.value);else Promise.resolve(result.value).then(v=>step('next',v),e=>step('throw',e));};step('next');
   });};
   const guardSource=source.slice(guardStart,guardEnd);
-  const generator=guardSource.match(/const t=t=>(\w+)\(/)[1];
-  const wrapper=guardSource.match(/function (\w+)\(e\)/)[1];
+  const generator=guardSource.match(/const t=t=>([$\w]+)\(/)[1];
+  const wrapper=guardSource.match(/function ([$\w]+)\(e\)/)[1];
   const guard=new Function(generator,guardSource+'return '+wrapper+';')(generatorPromise);
   const {stream}=await guard(provider).doStream({});
   const result=[];for await(const value of stream)result.push(value);return result;
