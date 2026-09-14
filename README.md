@@ -8,13 +8,14 @@ Companion project: [cursor-gpt-link](https://github.com/vertexitde/cursor-gpt-li
 
 | Item | Current status |
 | --- | --- |
-| Client platform | Windows x64 |
-| Latest tested Cursor | 3.20.21, September 14, 2026; automated checks |
+| Client platform | Windows x64; experimental macOS arm64 support on a separate app copy |
+| macOS build | Cursor 3.20.17; native UI validation pending |
+| Latest tested Windows Cursor | 3.20.21, September 14, 2026; automated checks |
 | Cursor commit | `f09fca384ceca23f7bf21f9c23655b162641d740` |
 | Supported Cursor 3.20.11 | Commit `69d099d6568dc97e110ba8184614faf51c4040b0` |
 | Previous supported Cursor | 3.20.7, commit `979197d5570b168c034c634b3e21f2bea3ea5be0` |
-| Node.js used locally | 26.7.0 |
-| Claude Code used locally | 2.1.263, signed in with Claude Max |
+| Windows Node.js used locally | 26.7.0 |
+| Windows Claude Code used locally | 2.1.263, signed in with Claude Max |
 | Model selection and file edits | Confirmed manually after updating Cursor to 3.20.11 |
 | Bridge tool calls | Sonnet and Fable round trips verified before the Cursor update |
 | Context and effort | Forwarding checked in both runtime bundles; short requests tested with 200K and 1M |
@@ -43,14 +44,60 @@ Effort levels come from model metadata: Low, Medium, High, Very high and Max whe
 
 ## Requirements
 
-- Windows x64 and a supported Cursor build.
+- Windows x64 and a supported Cursor build, or Apple silicon macOS with Cursor 3.20.17.
 - Node.js 22 or newer on PATH. Local testing used 26.7.0.
 - The native Claude Code executable and a Claude subscription sign-in with access to the requested models.
 - Permission to modify the Cursor installation.
 
 There are no npm dependencies. API-key-only authentication is not supported. Claude Code manages sign-in and token renewal; this project does not read credential files or import browser cookies.
+Optional environment variable names are listed in [.env.example](.env.example).
+Set them in your shell; `.env` files are not loaded automatically.
 
-## Install
+## Install on macOS
+
+The macOS installer creates `~/Applications/Cursor Claude.app` and restricts access to your user account.
+It keeps the original Cursor app intact and retains the existing native model picker and agent interface.
+Only the recorded macOS arm64 build is accepted; other versions and Intel Macs are rejected.
+
+An Apple Development or Developer ID Application signing identity with an accessible private key is required.
+Ad-hoc signing fails Electron's hardened-runtime library validation, even when `codesign --verify` passes.
+The installer preserves entitlements and hardened-runtime flags, signs the native modules and nested bundles consistently, and checks that Electron can load before reporting success.
+It does not disable Gatekeeper or library validation.
+
+List your available signing identities:
+
+```sh
+security find-identity -v -p codesigning
+```
+
+Set `CURSOR_MACOS_SIGN_IDENTITY` to the SHA-1 fingerprint of the personal Apple signing identity you want to use.
+Then, from this clone:
+
+```sh
+npm test
+npm run check
+npm run doctor
+npm run install:patch
+open "$HOME/Applications/Cursor Claude.app"
+```
+
+macOS may request access to that identity's private key during signing.
+The copied app has a different signing identity from the vendor app, so account sign-in or macOS permissions may need to be authorized again.
+The copy is for local use and is not a vendor-notarized distribution.
+
+Close the copied app before installation or restoration.
+`npm run status` verifies the app signature as well as installed-file and backup hashes.
+`npm run uninstall` restores the original resource files, native binaries and signing records byte for byte.
+The copy remains available after uninstall.
+Keep the clone and its ignored backups in place.
+macOS bridge startup errors are saved in `.state/bridge-startup.log` with owner-only access.
+
+For a custom target, `CURSOR_APP_ROOT` must point to an existing separate app copy inside your home directory.
+System-wide app targets are rejected.
+After a Cursor update, do not restore older backups over newer files; use a supported clean copy and the [update procedure](docs/testing.md#cursor-updates).
+macOS support currently covers standalone Claude installation only.
+
+## Install on Windows
 
 ```powershell
 git clone https://github.com/vertexitde/cursor-claude-link.git
@@ -134,7 +181,7 @@ In particular, [Fable can use usage credits on some plans](https://code.claude.c
 - Ultracode is not an effort level above Max. It combines xhigh reasoning with Claude Code's dynamic workflow orchestration. That orchestration is not implemented in this Cursor adapter, so no misleading Ultracode option is shown. See [Claude's model configuration](https://code.claude.com/docs/en/model-config#adjust-effort-level).
 - Initial model entries are embedded during installation. A failed catalog refresh can leave stale entries visible; the provider still decides whether a request is accepted.
 - Claude Code authentication, catalog and usage behavior can change separately from Cursor. A refresh-lock error can require retrying later or signing in again through Claude Code.
-- Cloud agents, macOS and Linux clients are unsupported. Separate manual coverage of both Cursor windows and SSH is still needed.
+- Cloud agents, Intel macOS and Linux clients are unsupported. Apple silicon macOS requires the separate signed app copy described above. Separate manual coverage of both Cursor windows and SSH is still needed.
 
 ## Reconnecting or failed requests
 

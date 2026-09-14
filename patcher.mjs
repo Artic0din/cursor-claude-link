@@ -8,8 +8,13 @@ try {
     console.log('Usage: node patcher.mjs check|status|install|restore\nSet CURSOR_APP_ROOT for a custom Cursor resources/app directory.\nRun node doctor.mjs to check Claude Code sign-in and model discovery.');
   }else if(command==='check'||command==='status'){
     const root=cursorRoot(),build=getBuild(root);
+    if(process.platform==='darwin'){
+      const {verifyMacSignature}=await import('./macos.mjs');
+      verifyMacSignature(root);
+    }
     if(fs.existsSync(manifestFile)){
       const manifest=JSON.parse(fs.readFileSync(manifestFile,'utf8'));
+      if(process.platform==='darwin'&&(manifest.macos?.root!==root||manifest.macos.signing))throw new Error('macOS installation state does not match this app, or signing was interrupted. Preserve the backups.');
       if(manifest.version!==build.version)throw new Error('Cursor was updated. The installation manifest belongs to '+manifest.version+'. Do not restore old files over the update. See docs/testing.md.');
       for(const file of manifest.files){
         if(sha256(fs.readFileSync(file.path))!==file.patchedHash||sha256(fs.readFileSync(file.backup))!==file.originalHash)throw new Error('Installed files or backups have changed.');

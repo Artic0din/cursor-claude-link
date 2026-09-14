@@ -6,12 +6,37 @@
 | --- | --- | --- |
 | 3.20.21 | `f09fca384ceca23f7bf21f9c23655b162641d740` | Windows x64 |
 | 3.20.17 | `0c32194e3fb5ffaced9fb36430b860ec301e1fc0` | Windows x64 |
+| 3.20.17 | `0c32194e3fb5ffaced9fb36430b860ec301e1fc0` | macOS arm64; copied app, native UI validation pending |
 | 3.20.11 | `69d099d6568dc97e110ba8184614faf51c4040b0` | Windows x64 |
 | 3.20.7 | `979197d5570b168c034c634b3e21f2bea3ea5be0` | Windows x64 |
 
 The build JSON files record SHA-256 hashes of original JavaScript bundles. Version-specific installers also require unique patch anchors and run Node.js syntax checks before writing application files. Existing GPT installations are accepted only through a matching local installation manifest.
 
-The public source check and unit tests do not require Cursor or Claude sign-in. They cover environment handling, model and context mapping, function-call preparation, usage parsing, picker sections and exact bridge-process matching. CI runs these on Windows with Node.js 22 and 24. Local verification used Node.js 26.7.0; CI results are separate evidence.
+The public source check and unit tests do not require Cursor or Claude sign-in.
+They cover environment handling, model and context mapping, function-call preparation, usage parsing, picker sections and exact bridge-process matching.
+The CI matrix includes Windows and macOS with Node.js 22 and 24; configured jobs are not evidence of a completed run.
+Local Windows verification used Node.js 26.7.0.
+
+## macOS port
+
+The macOS manifest records the original arm64 release's hashes, including the platform-specific agent runtimes and `product.json`.
+The desktop, Agents Window and startup JavaScript hashes match the corresponding supported Windows 3.20.17 build.
+The existing native patch anchors and Responses adapter probes passed against the macOS files.
+
+Local regression tests cover macOS worker replacement after the launching process exits, paths containing spaces, preservation of unrelated Node processes and readable startup failures.
+The platform tests reject unrecorded macOS builds and architectures, wrong commits and changed original files, and prevent linking other providers on macOS.
+Signing tests use temporary app bundles to prove exact restoration of signing records and resource contents, including rollback after a simulated interrupted signing operation.
+
+On September 14, 2026, the macOS bridge passed a real Sonnet function-call and tool-result round trip using the existing Claude Max sign-in.
+The local environment reported Node.js 25.2.1 and Claude Code 2.1.270; the live test did not edit workspace files.
+All six patches were also applied to a full private Cursor copy: syntax, anchors, backup hashes, both Responses adapters and native subagent checks passed.
+An intentional signing failure then exercised the complete backup and rollback path on that copy; the original resource hashes and vendor signature were restored.
+The main Cursor app retained its original hashes and signature throughout.
+
+Full Cursor copies must use an Apple signing identity while preserving entitlements and hardened-runtime flags.
+Both outer-only and nested ad-hoc signing passed static verification but failed Electron loading because library-validation Team IDs were unavailable.
+The installer therefore also launches Electron in Node mode as a native loading check.
+Signed GUI startup, a native conversation, account permissions and a complete real-app uninstall remain separate validation steps; synthetic signing tests do not establish those results.
 
 ## Cursor 3.20.21 update
 
@@ -112,4 +137,8 @@ For this subscription provider, an empty or whitespace-only requested model is n
 
 ### Bridge startup after the launching process exits
 
-A detached launcher now owns the complete stop/start sequence. Windows regression tests cover cold startup and replacement of an existing fixture worker after the launching process exits immediately. Previously the restart callback belonged to the exiting host. These checks use temporary workers, not account credentials or model requests. Both local usage endpoints were checked separately; the Agents Window display still requires a manual check.
+A detached launcher now owns the complete stop/start sequence.
+Windows and macOS regression tests cover cold startup and replacement of an existing fixture worker after the launching process exits immediately.
+Previously the restart callback belonged to the exiting host.
+These checks use temporary workers, not account credentials or model requests.
+Both local usage endpoints were checked separately; the Agents Window display still requires a manual check.

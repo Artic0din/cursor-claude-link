@@ -6,21 +6,28 @@ import crypto from 'node:crypto';
 export const sha256=value=>crypto.createHash('sha256').update(value).digest('hex');
 export function cursorRoot() {
   if(process.env.CURSOR_APP_ROOT)return path.resolve(process.env.CURSOR_APP_ROOT);
-  const roots=[process.env.LOCALAPPDATA&&path.join(process.env.LOCALAPPDATA,'Programs/cursor/resources/app'),
+  const roots=process.platform==='darwin'
+    ? [path.join(os.homedir(),'Applications/Cursor Claude.app/Contents/Resources/app'),
+       '/Applications/Cursor.app/Contents/Resources/app',path.join(os.homedir(),'Applications/Cursor.app/Contents/Resources/app')]
+    : [process.env.LOCALAPPDATA&&path.join(process.env.LOCALAPPDATA,'Programs/cursor/resources/app'),
     process.env.ProgramFiles&&path.join(process.env.ProgramFiles,'Cursor/resources/app')].filter(Boolean);
   const root=roots.find(p=>fs.existsSync(path.join(p,'product.json')));
   if(!root)throw new Error('Cursor was not found. Set CURSOR_APP_ROOT to its resources/app directory.');
   return root;
 }
 export function linkedGptManifests() {
+  if(process.platform==='darwin')return [];
   return [...new Set([path.join(os.homedir(),'cursor-chatgpt-bridge/installed.json'),
     path.join(process.env.CURSOR_GPT_LINK_HOME||path.join(process.env.LOCALAPPDATA||os.homedir(),'cursor-gpt-link'),'installed.json')])];
 }
-export function getBuild(root) {
-  if(process.platform!=='win32'||process.arch!=='x64')throw new Error('Only Windows x64 clients are supported.');
+export function getBuild(root, {platform=process.platform,arch=process.arch}={}) {
+  if(!((platform==='win32'&&arch==='x64')||(platform==='darwin'&&arch==='arm64')))throw new Error('Unsupported client platform: '+platform+' '+arch);
   const version=JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8')).version;
-  if(!['3.20.7','3.20.11','3.20.17','3.20.21'].includes(version))throw new Error('Unsupported Cursor version: '+version);
-  const build=JSON.parse(fs.readFileSync(new URL('./build-'+version+'.json',import.meta.url),'utf8'));
+  if(typeof version!=='string'||!/^\d+\.\d+\.\d+$/.test(version))throw new Error('Unsupported Cursor version: '+version);
+  const metadata=new URL('./build-'+version+(platform==='darwin'?'-darwin-arm64':'')+'.json',import.meta.url);
+  if(!fs.existsSync(metadata))throw new Error('Unsupported Cursor build for '+platform+' '+arch+': '+version);
+  const build=JSON.parse(fs.readFileSync(metadata,'utf8'));
+  if(build.platform!==platform||build.arch!==arch)throw new Error('Build metadata platform mismatch.');
   if(JSON.parse(fs.readFileSync(path.join(root,'product.json'),'utf8')).commit!==build.commit)throw new Error('Unsupported Cursor commit.');
   return build;
 }
