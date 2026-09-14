@@ -1,3 +1,4 @@
+import {verifySubagentLifecycle} from './subagent-lifecycle-check.mjs';
 import {verifySubagentModels} from './subagent-model-check.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -7,6 +8,7 @@ if(!root)throw new Error('Usage: node scripts/check-subagents.mjs <patched Curso
 for(const surface of ['desktop','glass']){
  const source=fs.readFileSync(path.join(root,'out/vs/workbench/workbench.'+surface+'.main.js'),'utf8');
  await verifySubagentRegistration(source);
+ if(source.includes('var __subscriptionSubagentPrefixes='))await verifySubagentLifecycle(source,['claude-subscription/']);
  console.log(surface+': Claude subagent registration passed.');
 }
 

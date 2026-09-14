@@ -1,3 +1,4 @@
+import {patchSubagentLifecycle} from './subagent-lifecycle.mjs';
 import {patchMaxMode} from './max-mode.mjs';
 import {patchSubagentSettingsWorkbench, patchSubagentSettingsRuntime} from './subagent-settings.mjs';
 import {patchSubagentModel} from './subagent-model.mjs';
@@ -107,6 +108,7 @@ for(const surface of ['desktop','glass']){
   source=once(source,usageChildren,usageChildren.slice(0,-1)+','+usage.jsx+'(__claudeUsageSection,{})]');
   source=patchMaxMode(patchSubagentSettingsWorkbench(source));
   source=patchSubagentBubbles(source,surface,'3.20.21');
+  source=patchSubagentLifecycle(source,surface,'claude-subscription/');
   pending.push({path:target,content:source});
 }
 for(const name of ['cursor-agent-exec','cursor-local-agent-runtime']){
