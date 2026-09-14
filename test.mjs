@@ -6,7 +6,7 @@ import {sanitizeModels} from './catalog.mjs';
 import {formatPlan, parseReset, parseUsageWindows, zonedDateToEpoch} from './usage.mjs';
 import {usageSectionSrc} from './usage-section.mjs';
 import {withSubscriptionPickerSections, patchPickerSections} from './picker-sections.mjs';
-import {bridgeCommandPattern, buildBridgeLauncher} from './autostart.mjs';
+import {bridgeCommandPattern, bridgeCommandPosixPattern, buildBridgeLauncher} from './autostart.mjs';
 const catalog=sanitizeModels([
  {value:'sonnet',displayName:'Sonnet',supportsEffort:true,supportedEffortLevels:['low','medium','high','xhigh','max']},
  {value:'fable',displayName:'Fable',supportsEffort:true,supportedEffortLevels:['high','max']},
@@ -136,9 +136,13 @@ test('autostart restarts only the Claude bridge worker',()=>{
   const nodePath='/usr/local/bin/node';
   const bridgePath='/Users/example/cursor-claude-link/bridge.mjs';
   assert.match(bridgeCommandPattern(nodePath,bridgePath),/cursor-claude-link/);
+  assert.equal(bridgeCommandPosixPattern(nodePath,bridgePath).includes('\\s'),false);
+  assert.match(bridgeCommandPosixPattern(nodePath,bridgePath),/\[\[:space:\]\]/);
   const src=buildBridgeLauncher({nodePath,bridgePath,port:43188});
   assert.match(src,/cursor-claude-link/);
-  assert.match(src,/pkill",\["-i","-f"/);
+  assert.match(src,/pkill",\["-f"/);
+  assert.match(src,/\[\[:space:\]\]/);
+  assert.equal(src.includes('\\s'),false);
   assert.match(src,/process\.platform==="darwin"/);
   assert.equal(src.includes('powershell'),false);
   assert.equal(src.includes('windowsHide'),false);

@@ -4,10 +4,17 @@ export function bridgeCommandPattern(nodePath, bridgePath) {
   return '^"?' + escapeRegex(nodePath) + '"?\\s+"?' + escapeRegex(bridgePath) + '"?\\s*$';
 }
 
+// macOS pkill matches with the platform POSIX extended regex engine, where
+// \s is not a whitespace class. Translate the JavaScript pattern so the
+// restart passed to pkill keeps the same exact-match meaning.
+export function bridgeCommandPosixPattern(nodePath, bridgePath) {
+  return bridgeCommandPattern(nodePath, bridgePath).replaceAll('\\s', '[[:space:]]');
+}
+
 export function buildBridgeLauncher({nodePath, bridgePath}) {
   // Restart only this installation's worker. The pattern is passed as an
   // argument to pkill (no shell), matching cursor-gpt-link.
-  const pattern = bridgeCommandPattern(nodePath, bridgePath);
+  const pattern = bridgeCommandPosixPattern(nodePath, bridgePath);
   return `
 const {execFile,spawn}=require("node:child_process");
 const start=()=>{
@@ -17,7 +24,7 @@ const start=()=>{
   });
   worker.on("error",()=>{});worker.unref();
 };
-if(process.platform==="darwin")execFile("pkill",["-i","-f",${JSON.stringify(pattern)}],()=>start());
+if(process.platform==="darwin")execFile("pkill",["-f",${JSON.stringify(pattern)}],()=>start());
 else start();
 `;
 }
