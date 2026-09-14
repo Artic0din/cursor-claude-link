@@ -6,7 +6,7 @@
   "description": "Use local Claude Code subscription models in the Cursor agent harness",
   "scripts": {
     "doctor": "node doctor.mjs",
-    "test": "node --test test.mjs bridge.test.mjs attachments.test.mjs token-usage.test.mjs subagent-bubbles.test.mjs",
+    "test": "node --test test.mjs bridge.test.mjs attachments.test.mjs token-usage.test.mjs subagent-bubbles.test.mjs autostart.test.mjs",
     "test:live": "node live-test.mjs",
     "install:patch": "node patcher.mjs install",
     "uninstall": "node patcher.mjs restore",

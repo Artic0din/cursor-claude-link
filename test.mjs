@@ -6,7 +6,7 @@ import {sanitizeModels} from './catalog.mjs';
 import {formatPlan, parseReset, parseUsageWindows, zonedDateToEpoch} from './usage.mjs';
 import {usageSectionSrc} from './usage-section.mjs';
 import {withSubscriptionPickerSections, patchPickerSections} from './picker-sections.mjs';
-import {bridgeCommandPattern, buildAutostart} from './autostart.mjs';
+import {bridgeCommandPattern, buildBridgeLauncher} from './autostart.mjs';
 const catalog=sanitizeModels([
  {value:'sonnet',displayName:'Sonnet',supportsEffort:true,supportedEffortLevels:['low','medium','high','xhigh','max']},
  {value:'fable',displayName:'Fable',supportsEffort:true,supportedEffortLevels:['high','max']},
@@ -136,7 +136,7 @@ test('autostart restarts only the Claude bridge worker',()=>{
   const nodePath='C:\\Program Files\\nodejs\\node.exe';
   const bridgePath='C:\\Users\\example\\cursor-claude-link\\bridge.mjs';
   assert.match(bridgeCommandPattern(nodePath,bridgePath),/cursor-claude-link/);
-  const src=buildAutostart({nodePath,bridgePath,port:43188});
+  const src=buildBridgeLauncher({nodePath,bridgePath,port:43188});
   assert.match(src,/cursor-claude-link/);
   const encoded=src.match(/EncodedCommand","([^"]+)/)[1];
   const decoded=Buffer.from(encoded,'base64').toString('utf16le');
