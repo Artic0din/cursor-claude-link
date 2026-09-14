@@ -1,3 +1,4 @@
+import {patchConversationActionsWorkbench,patchConversationActionsRuntime} from './conversation-actions.mjs';
 import {patchSubagentLifecycle} from './subagent-lifecycle.mjs';
 import {patchMaxMode} from './max-mode.mjs';
 import {patchSubagentSettingsWorkbench, patchSubagentSettingsRuntime} from './subagent-settings.mjs';
@@ -109,6 +110,7 @@ for(const surface of ['desktop','glass']){
   source=patchMaxMode(patchSubagentSettingsWorkbench(source));
   source=patchSubagentBubbles(source,surface,'3.20.21');
   source=patchSubagentLifecycle(source,surface,'claude-subscription/');
+  source=patchConversationActionsWorkbench(source,surface,'claude-subscription/');
   pending.push({path:target,content:source});
 }
 for(const name of ['cursor-agent-exec','cursor-local-agent-runtime']){
@@ -119,7 +121,7 @@ for(const name of ['cursor-agent-exec','cursor-local-agent-runtime']){
   const heuristic='n.includes("codex")?"responses":"chat_completions"';
   const claudeHeuristic='n.includes("codex")||n.startsWith("claude-subscription/")?"responses":"chat_completions"';
   if(!source.includes(claudeHeuristic))source=once(source,heuristic,claudeHeuristic);
-  source=patchSubagentSettingsRuntime(patchSubagentModel(source));
+  source=patchConversationActionsRuntime(patchSubagentSettingsRuntime(patchSubagentModel(source)),'claude-subscription/');
   pending.push({path:target,content:source});
 }
 const main=path.join(root,'out/main.js');

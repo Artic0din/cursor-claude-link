@@ -34,6 +34,9 @@ On Cursor 3.20.21, **Explore Subagent Model** selections are forwarded to the lo
 
 On Cursor 3.20.21, stopping a subscription chat also cancels its active subagents. Local subagent stops do not wait for the agent-host service, and a cancelled parent cannot start a late child request. Reopening a subagent refreshes its transcript cache and loads the most recent missing messages. These changes passed automated checks; manual chat-switch and stop verification is still pending.
 
+On Cursor 3.20.21, queued follow-ups are forwarded to the local runtime. Starting Build also preserves human messages that have not reached the conversation checkpoint yet. Delivery is confirmed by native message events, and stopping the chat prevents queued work from starting another run. Automated queue and build checks passed; manual Plan-to-Build validation is pending.
+
+
 ## What it adds
 
 Models appear with a small Claude logo in a **Claude Subscription** section. ChatGPT subscription models and native Cursor models keep their own sections.
