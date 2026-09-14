@@ -26,7 +26,7 @@ export function contextEnvironment(contextTokens, source=process.env) {
 
 export function runCli(executable, args, {input = '', signal, cwd, timeout = 180000, contextTokens, streamJson=false} = {}) {
   return new Promise((resolve, reject) => {
-    const child = spawn(executable, args, {cwd, env:contextTokens?contextEnvironment(contextTokens):subscriptionEnvironment(), windowsHide:true, stdio:['pipe','pipe','pipe']});
+    const child = spawn(executable, args, {cwd, env:contextTokens?contextEnvironment(contextTokens):subscriptionEnvironment(), stdio:['pipe','pipe','pipe']});
     child.stdout.setEncoding('utf8');child.stderr.setEncoding('utf8');
     let stdout = '', stderr = '', settled = false;
     const finish = (error, value) => {

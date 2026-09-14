@@ -4,14 +4,14 @@
 
 | Version | Commit | Platform |
 | --- | --- | --- |
-| 3.20.21 | `f09fca384ceca23f7bf21f9c23655b162641d740` | Windows x64 |
-| 3.20.17 | `0c32194e3fb5ffaced9fb36430b860ec301e1fc0` | Windows x64 |
-| 3.20.11 | `69d099d6568dc97e110ba8184614faf51c4040b0` | Windows x64 |
-| 3.20.7 | `979197d5570b168c034c634b3e21f2bea3ea5be0` | Windows x64 |
+| 3.20.21 | `f09fca384ceca23f7bf21f9c23655b162641d740` | macOS 26+ arm64 |
+| 3.20.17 | `0c32194e3fb5ffaced9fb36430b860ec301e1fc0` | macOS 26+ arm64 |
+| 3.20.11 | `69d099d6568dc97e110ba8184614faf51c4040b0` | macOS 26+ arm64 |
+| 3.20.7 | `979197d5570b168c034c634b3e21f2bea3ea5be0` | macOS 26+ arm64 |
 
 The build JSON files record SHA-256 hashes of original JavaScript bundles. Version-specific installers also require unique patch anchors and run Node.js syntax checks before writing application files. Existing GPT installations are accepted only through a matching local installation manifest.
 
-The public source check and unit tests do not require Cursor or Claude sign-in. They cover environment handling, model and context mapping, function-call preparation, usage parsing, picker sections and exact bridge-process matching. CI runs these on Windows with Node.js 22 and 24. Local verification used Node.js 26.7.0; CI results are separate evidence.
+The public source check and unit tests do not require Cursor or Claude sign-in. They cover environment handling, model and context mapping, function-call preparation, usage parsing, picker sections and exact bridge-process matching. CI runs these on macOS 26 (Apple Silicon) with Node.js 22, 24 and 26. Local verification used Node.js 26.7.0; CI results are separate evidence.
 
 ## Cursor 3.20.21 update
 
@@ -58,7 +58,7 @@ Do not edit the supported version number or hash list to bypass verification. A 
 
 With the local bridge running:
 
-```powershell
+```bash
 npm run test:live
 ```
 
@@ -70,8 +70,8 @@ On September 11, 2026, the original `response.failed` behavior was reproduced ag
 
 To run the installed adapter checks without model requests:
 
-```powershell
-npm run check:runtime -- "C:\path\to\Cursor\resources\app"
+```bash
+npm run check:runtime -- "/Applications/Cursor.app/Contents/Resources/app"
 ```
 
 This reads supported installed code and exercises it with synthetic inputs. It does not modify the application or send network requests beyond loopback.
@@ -112,4 +112,4 @@ For this subscription provider, an empty or whitespace-only requested model is n
 
 ### Bridge startup after the launching process exits
 
-A detached launcher now owns the complete stop/start sequence. Windows regression tests cover cold startup and replacement of an existing fixture worker after the launching process exits immediately. Previously the restart callback belonged to the exiting host. These checks use temporary workers, not account credentials or model requests. Both local usage endpoints were checked separately; the Agents Window display still requires a manual check.
+A detached launcher now owns the complete stop/start sequence. macOS regression tests cover cold startup and replacement of an existing fixture worker after the launching process exits immediately. Previously the restart callback belonged to the exiting host. These checks use temporary workers, not account credentials or model requests. Both local usage endpoints were checked separately; the Agents Window display still requires a manual check.

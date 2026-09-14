@@ -19,7 +19,7 @@ export function discoverModels(executable, {cwd, timeout=20000, spawnProcess=spa
     const child=spawnProcess(executable,['-p','--input-format','stream-json','--output-format','stream-json','--verbose',
       '--tools','','--setting-sources','','--settings','{"disableAllHooks":true}',
       '--strict-mcp-config','--mcp-config','{"mcpServers":{}}','--no-chrome','--disable-slash-commands','--no-session-persistence'],
-      {cwd,env:subscriptionEnvironment(),windowsHide:true,stdio:['pipe','pipe','pipe']});
+      {cwd,env:subscriptionEnvironment(),stdio:['pipe','pipe','pipe']});
     let buffer='',settled=false,catalog;
     const finish=(error,models)=>{if(settled)return;settled=true;clearTimeout(timer);if(error)child.kill();error?reject(error):resolve(models);};
     const timer=setTimeout(()=>finish(new Error('Claude model discovery timed out.')),timeout);

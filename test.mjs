@@ -133,15 +133,26 @@ test('usage settings card fetches the local Claude usage route',()=>{
   assert.match(src,/Next reset/);
 });
 test('autostart restarts only the Claude bridge worker',()=>{
-  const nodePath='C:\\Program Files\\nodejs\\node.exe';
-  const bridgePath='C:\\Users\\example\\cursor-claude-link\\bridge.mjs';
+  const nodePath='/usr/local/bin/node';
+  const bridgePath='/Users/example/cursor-claude-link/bridge.mjs';
   assert.match(bridgeCommandPattern(nodePath,bridgePath),/cursor-claude-link/);
   const src=buildBridgeLauncher({nodePath,bridgePath,port:43188});
   assert.match(src,/cursor-claude-link/);
-  const encoded=src.match(/EncodedCommand","([^"]+)/)[1];
-  const decoded=Buffer.from(encoded,'base64').toString('utf16le');
-  assert.equal(decoded.includes('Get-NetTCPConnection'),false);
-  assert.equal(decoded.includes('-like'),false);
-  assert.match(decoded,/cursor-claude-link/);
-  assert.equal(decoded.includes('cursor-gpt-link'),false);
+  assert.match(src,/pkill",\["-i","-f"/);
+  assert.match(src,/process\.platform==="darwin"/);
+  assert.equal(src.includes('powershell'),false);
+  assert.equal(src.includes('windowsHide'),false);
+  assert.equal(src.includes('win32'),false);
+  assert.equal(src.includes('cursor-gpt-link'),false);
+});
+test('installer rejects non-macOS Apple Silicon clients',async()=>{
+  const {assertSupportedClient,macOSProductVersion}=await import('./build-support.mjs');
+  if(process.platform==='darwin'&&process.arch==='arm64'){
+    const version=macOSProductVersion();
+    const major=Number(String(version||'').split('.')[0]);
+    if(Number.isFinite(major)&&major>=26)assert.doesNotThrow(()=>assertSupportedClient());
+    else assert.throws(()=>assertSupportedClient(),/macOS 26\+/);
+  }else{
+    assert.throws(()=>assertSupportedClient(),/macOS 26\+/);
+  }
 });

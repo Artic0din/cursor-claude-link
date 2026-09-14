@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Use local Claude Code subscription models in the Cursor agent harness",
+  "description": "Use local Claude Code subscription models in the Cursor agent harness on macOS 26+ (Apple Silicon)",
   "scripts": {
     "doctor": "node doctor.mjs",
     "test": "node --test test.mjs bridge.test.mjs attachments.test.mjs token-usage.test.mjs subagent-bubbles.test.mjs autostart.test.mjs",

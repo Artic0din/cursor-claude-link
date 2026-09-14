@@ -2,13 +2,13 @@
 
 An experimental patch that adds your Claude Code models to Cursor and uses your existing Claude subscription sign-in. Cursor keeps its agent harness, tools and approval controls. No extension is installed.
 
-Companion project: [cursor-gpt-link](https://github.com/vertexitde/cursor-gpt-link).
+Companion project: [cursor-gpt-link](https://github.com/Artic0din/cursor-gpt-link).
 
 ## Status
 
 | Item | Current status |
 | --- | --- |
-| Client platform | Windows x64 |
+| Client platform | macOS 26+ (Apple Silicon, arm64) |
 | Latest tested Cursor | 3.20.21, September 14, 2026; automated checks |
 | Cursor commit | `f09fca384ceca23f7bf21f9c23655b162641d740` |
 | Supported Cursor 3.20.11 | Commit `69d099d6568dc97e110ba8184614faf51c4040b0` |
@@ -43,7 +43,7 @@ Effort levels come from model metadata: Low, Medium, High, Very high and Max whe
 
 ## Requirements
 
-- Windows x64 and a supported Cursor build.
+- macOS 26 or newer on Apple Silicon (arm64) and a supported Cursor build.
 - Node.js 22 or newer on PATH. Local testing used 26.7.0.
 - The native Claude Code executable and a Claude subscription sign-in with access to the requested models.
 - Permission to modify the Cursor installation.
@@ -52,8 +52,8 @@ There are no npm dependencies. API-key-only authentication is not supported. Cla
 
 ## Install
 
-```powershell
-git clone https://github.com/vertexitde/cursor-claude-link.git
+```bash
+git clone https://github.com/Artic0din/cursor-claude-link.git
 cd cursor-claude-link
 npm run check
 claude auth login --claudeai
@@ -64,22 +64,22 @@ Skip the login command if Claude Code is already signed into the correct account
 
 Close Cursor, then install:
 
-```powershell
+```bash
 npm run install:patch
 ```
 
 Start Cursor again and select a Claude model. The bridge starts with Cursor on `127.0.0.1:43188`. To start it manually, use `npm start`. If you applied the patch while Cursor was open, run **Developer: Reload Window** and start the bridge if needed.
 
-The installer prefers `claude.exe` on PATH, matching the terminal, then tries the native install location. For custom locations, set these before the first installation:
+The installer prefers `claude` on PATH, matching the terminal, then tries `~/.local/bin/claude`. For custom locations, set these before the first installation:
 
-```powershell
-$env:CURSOR_APP_ROOT = 'D:\Apps\Cursor\resources\app'
-$env:CLAUDE_EXECUTABLE = 'D:\Tools\claude.exe'
+```bash
+export CURSOR_APP_ROOT="/Applications/Cursor.app/Contents/Resources/app"
+export CLAUDE_EXECUTABLE="/opt/homebrew/bin/claude"
 npm run check
 npm run install:patch
 ```
 
-`CURSOR_APP_ROOT` points to `resources/app`, not the folder containing `Cursor.exe`. Keep the same value for later status and restore commands. The chosen Claude executable is saved in local `config.json`.
+`CURSOR_APP_ROOT` points to `Contents/Resources/app`, not the `Cursor.app` bundle root. Keep the same value for later status and restore commands. The chosen Claude executable is saved in local `config.json`.
 
 Configuration, installation manifests and backups live in this clone and are ignored by Git. Keep the clone and Node.js at their installation paths while the patch is installed. Unlike cursor-gpt-link, this release does not copy its runtime into a separate state directory. To move the project, restore first and install again from the new location.
 
@@ -93,20 +93,20 @@ Custom public ChatGPT state directories are recognized through `CURSOR_GPT_LINK_
 
 ## Check, update or remove
 
-```powershell
+```bash
 npm run status
 npm run uninstall
 ```
 
 These correspond to `node patcher.mjs status` and `node patcher.mjs restore`. Status verifies installed-file and backup hashes. Restore refuses to overwrite changed files. Backups remain available.
 
-For a normal project update, close Cursor, restore the patch, run `git pull`, then install again. An already running bridge can remain after restore until stopped or Windows is restarted. Do not share its local key or configuration.
+For a normal project update, close Cursor, restore the patch, run `git pull`, then install again. An already running bridge can remain after restore until stopped or the Mac is restarted. Do not share its local key or configuration.
 
 Cursor updates can replace the patched files. **Do not restore old backups over a newer Cursor build.** Check the supported version table and follow [the update notes](docs/testing.md#cursor-updates). There is no force option.
 
 ## Remote SSH
 
-Inference runs on the local PC through Cursor's dedicated local runtime. Cursor's existing workspace path handles tools on the SSH host. The remote machine should not need Claude Code, copied credentials or a forwarded bridge port.
+Inference runs on the local Mac through Cursor's dedicated local runtime. Cursor's existing workspace path handles tools on the SSH host. The remote machine should not need Claude Code, copied credentials or a forwarded bridge port.
 
 This routing is implemented in both workbenches. Claude-specific end-to-end SSH validation is still pending; the successful SSH tests in cursor-gpt-link do not establish Claude coverage.
 
@@ -134,7 +134,7 @@ In particular, [Fable can use usage credits on some plans](https://code.claude.c
 - Ultracode is not an effort level above Max. It combines xhigh reasoning with Claude Code's dynamic workflow orchestration. That orchestration is not implemented in this Cursor adapter, so no misleading Ultracode option is shown. See [Claude's model configuration](https://code.claude.com/docs/en/model-config#adjust-effort-level).
 - Initial model entries are embedded during installation. A failed catalog refresh can leave stale entries visible; the provider still decides whether a request is accepted.
 - Claude Code authentication, catalog and usage behavior can change separately from Cursor. A refresh-lock error can require retrying later or signing in again through Claude Code.
-- Cloud agents, macOS and Linux clients are unsupported. Separate manual coverage of both Cursor windows and SSH is still needed.
+- Cloud agents, Windows and Linux clients are unsupported. Only macOS 26+ on Apple Silicon is supported. Separate manual coverage of both Cursor windows and SSH is still needed.
 
 ## Reconnecting or failed requests
 
@@ -160,7 +160,7 @@ An existing conversation keeps its saved context value until the next successful
 
 ## Development
 
-```powershell
+```bash
 npm test
 npm run check:source
 ```

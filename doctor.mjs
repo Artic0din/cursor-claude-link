@@ -11,7 +11,7 @@ try{
   const executable=fs.existsSync(configFile)?JSON.parse(fs.readFileSync(configFile,'utf8')).claude:findClaude();
   result.cliFound=fs.existsSync(executable);
   result.executable=executable;
-  result.version=execFileSync(executable,['--version'],{env:subscriptionEnvironment(),encoding:'utf8',windowsHide:true,timeout:15000,stdio:['ignore','pipe','pipe']}).trim();
+  result.version=execFileSync(executable,['--version'],{env:subscriptionEnvironment(),encoding:'utf8',timeout:15000,stdio:['ignore','pipe','pipe']}).trim();
   Object.assign(result,await requireSubscription(executable));
   result.models=await discoverModels(executable);
 }catch{result.error='Could not verify Claude Code and subscription. Check installation and run claude auth login --claudeai.';}
