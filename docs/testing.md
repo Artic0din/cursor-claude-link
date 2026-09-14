@@ -76,3 +76,9 @@ The preceding test history remains in Git.
 
 Fresh macOS SSH file edits, live subagents, cancellation, fresh sign-in/renewal and large-context workloads remain unverified.
 Fast and Ultracode are not implemented.
+
+### Explore model settings
+
+The workbench now includes the explicitly selected Explore model in the local runtime catalog. Previously a selection missing from `localProviderAgentModelIds` silently became Inherit. The patch also carries the selected model parameters into the client subagent request and preserves parent parameters for inherited models. Default, Inherit and Disabled continue through Cursor's native resolver.
+
+Unit tests reproduce the missing-catalog fallback. Upstream checked this against Windows Cursor 3.20.21; this fork keeps those workbench and runtime patches and still rejects unverified Windows hashes on macOS. Tooltip tests cover every effort and context variant using the native Markdown layout. A live SSH Explore run with a different selected model still needs manual confirmation.

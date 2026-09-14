@@ -170,3 +170,15 @@ test('installer rejects non-macOS Apple Silicon clients',async()=>{
     assert.throws(()=>assertSupportedClient(build),/macOS 26\+/);
   }
 });
+
+test('each Claude variant describes its selected context and effort',()=>{
+ for(const m of pickerModels(contextCatalog))for(const v of m.variants){
+  const effort=v.parameterValues.find(p=>p.id==='reasoning')?.value;
+  const context=v.parameterValues.find(p=>p.id==='context')?.value;
+  const text=v.tooltipData.markdownContent;
+  assert.ok(text.includes(context==='1000000'?'1M context window':'200k context window'));
+  if(effort)assert.ok(text.endsWith('*Version: '+(effort==='xhigh'?'very high':effort)+' effort*'));
+  else assert.equal(text.includes('Version:'),false);
+  assert.equal(text.includes('Context:'),false);
+ }
+});

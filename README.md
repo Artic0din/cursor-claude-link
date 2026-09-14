@@ -30,6 +30,8 @@ Only the listed builds are supported. The installer checks version, commit, orig
 On Cursor 3.20.17, local subscription subagents also receive a missing parent Task entry before Cursor waits for its registration.
 The repair passed automated checks in both workbenches; a completed SSH subagent task still needs manual confirmation.
 
+On Cursor 3.20.21, **Explore Subagent Model** selections are forwarded to the local runtime with their model parameters. **Default**, **Inherit** and **Disabled** retain Cursor's native behavior. Model tooltips show the context window and selected effort in the same layout as Cursor's built-in models. See the [testing notes](docs/testing.md) for coverage.
+
 ## What it adds
 
 Models appear with a small Claude logo in a **Claude Subscription** section. ChatGPT subscription models and native Cursor models keep their own sections.
