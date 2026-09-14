@@ -82,3 +82,7 @@ Fast and Ultracode are not implemented.
 The workbench now includes the explicitly selected Explore model in the local runtime catalog. Previously a selection missing from `localProviderAgentModelIds` silently became Inherit. The patch also carries the selected model parameters into the client subagent request and preserves parent parameters for inherited models. Default, Inherit and Disabled continue through Cursor's native resolver.
 
 Unit tests reproduce the missing-catalog fallback. Upstream checked this against Windows Cursor 3.20.21; this fork keeps those workbench and runtime patches and still rejects unverified Windows hashes on macOS. Tooltip tests cover every effort and context variant using the native Markdown layout. Upstream also recorded an Explore model, effort and tooltip confirmation after reload; that check is not a macOS, IDE or SSH matrix. A live SSH Explore run with a different selected model still needs manual confirmation.
+
+### Context and MAX mode
+
+Context selection and Cursor's legacy MAX switch now choose the actual runtime window while preserving effort. Models advertise `capabilities.context_length` so Cursor can cap its prompt session, usage display and compaction budget. See [Context and MAX mode](model-modes.md). Unit tests cover variant scoring; native solver checks need an installed Cursor app.

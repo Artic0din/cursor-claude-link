@@ -1,3 +1,4 @@
+import {maxModeVariant} from './max-mode.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {subscriptionEnvironment, contextEnvironment, prepareRequest as prepare} from './runner.mjs';
@@ -181,4 +182,23 @@ test('each Claude variant describes its selected context and effort',()=>{
   else assert.equal(text.includes('Version:'),false);
   assert.equal(text.includes('Context:'),false);
  }
+});
+
+test('MAX selects the Claude 1M variant and keeps effort in both directions',()=>{
+ const picker=pickerModels(contextCatalog).find(m=>m.name==='claude-subscription/opus');
+ assert.equal(picker.supportsMaxMode,true);
+ assert.equal(picker.variants.filter(v=>v.isDefaultMaxConfig).length,1);
+ for(const variant of picker.variants)for(const maxMode of [false,true]){
+  const selected=maxModeVariant(picker,variant.parameterValues,maxMode);
+  const context=selected.parameterValues.find(p=>p.id==='context').value;
+  const effort=selected.parameterValues.find(p=>p.id==='reasoning').value;
+  assert.equal(context,maxMode?'1000000':'200000');
+  assert.equal(effort,variant.parameterValues.find(p=>p.id==='reasoning').value);
+  const request=prepare({model:picker.name,input:[],reasoning:{effort},claude_context:Number(context)},contextCatalog);
+  assert.equal(request.contextTokens,Number(context));
+  assert.equal(request.model,maxMode?'opus[1m]':'opus');
+ }
+ const meta=providerModels(contextCatalog);
+ assert.equal(meta.find(m=>m.id===picker.name).capabilities.context_length,1000000);
+ assert.equal(meta.find(m=>m.id.endsWith('/haiku')).capabilities.context_length,200000);
 });

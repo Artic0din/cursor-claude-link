@@ -1,3 +1,4 @@
+import {patchMaxMode} from './max-mode.mjs';
 import {patchSubagentSettingsWorkbench, patchSubagentSettingsRuntime} from './subagent-settings.mjs';
 import {patchSubagentModel} from './subagent-model.mjs';
 import {patchSubagentBubbles} from './subagent-bubbles.mjs';
@@ -104,7 +105,7 @@ for(const surface of ['desktop','glass']){
   source=once(source,usage.fn,usageSectionSrc(usage)+usage.fn);
   const usageChildren=source.includes(usage.childrenGpt)?usage.childrenGpt:usage.children;
   source=once(source,usageChildren,usageChildren.slice(0,-1)+','+usage.jsx+'(__claudeUsageSection,{})]');
-  source=patchSubagentSettingsWorkbench(source);
+  source=patchMaxMode(patchSubagentSettingsWorkbench(source));
   source=patchSubagentBubbles(source,surface,'3.20.21');
   pending.push({path:target,content:source});
 }

@@ -30,7 +30,7 @@ Only the listed builds are supported. The installer checks version, commit, orig
 On Cursor 3.20.17, local subscription subagents also receive a missing parent Task entry before Cursor waits for its registration.
 The repair passed automated checks in both workbenches; a completed SSH subagent task still needs manual confirmation.
 
-On Cursor 3.20.21, **Explore Subagent Model** selections are forwarded to the local runtime with their model parameters. **Default**, **Inherit** and **Disabled** retain Cursor's native behavior. Model tooltips show the context window and selected effort in the same layout as Cursor's built-in models. See the [testing notes](docs/testing.md) for coverage.
+On Cursor 3.20.21, **Explore Subagent Model** selections are forwarded to the local runtime with their model parameters. **Default**, **Inherit** and **Disabled** retain Cursor's native behavior. Model tooltips show the context window and selected effort in the same layout as Cursor's built-in models. Context selection and the legacy MAX switch now control the actual runtime window while preserving effort. See [Context and MAX mode](docs/model-modes.md). See the [testing notes](docs/testing.md) for coverage.
 
 ## What it adds
 
