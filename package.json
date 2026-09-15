@@ -19,7 +19,8 @@
     "check:runtime": "node scripts/check-runtime.mjs",
     "test:attachments": "node scripts/test-attachments.mjs",
     "check:subagents": "node scripts/check-subagents.mjs",
-    "check:actions": "node scripts/check-conversation-actions.mjs"
+    "check:actions": "node scripts/check-conversation-actions.mjs",
+    "check:ui": "node scripts/check-ui.mjs"
   },
   "engines": {
     "node": ">=22"
