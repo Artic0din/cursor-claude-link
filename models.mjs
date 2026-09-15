@@ -18,7 +18,7 @@ export function pickerModels(catalog) {
     return {name:id,serverModelName:id,clientDisplayName:name,inputboxShortModelName:name,
       defaultOn:true,supportsAgent:true,supportsImages:true,supportsThinking:efforts.length>0,
       supportsNonMaxMode:true,supportsMaxMode:model.extended,supportsPlanMode:true,supportsAutoContext:true,
-      contextTokenLimit:contexts.at(-1),autoContextMaxTokens:contexts.at(-1),namedModelSectionIndex:0,
+      contextTokenLimit:200000,contextTokenLimitForMaxMode:contexts.at(-1),autoContextMaxTokens:contexts.at(-1),namedModelSectionIndex:0,
       vendorName:'anthropic',vendor:{id:1,displayName:'Anthropic'},modelPickerBadges:[],cloudAgentEffortModes:[],tagline:model.summary,tooltipData:tooltip(200000,defaultEffort),
       parameterDefinitions:[
         ...(model.extended?[{id:'context',name:'Context',markdownTooltip:'Choose the context budget for this conversation. 1M gives Claude more room for large codebases and long sessions.',
@@ -41,5 +41,5 @@ export function pickerModels(catalog) {
 
 export function providerModels(catalog) {
   return pickerModels(catalog).map(m=>({id:m.name,object:'model',owned_by:'anthropic',api_types:['openai_responses'],
-    capabilities:{context_length:m.contextTokenLimit,supports_vision:m.supportsImages,supports_reasoning:m.supportsThinking}}));
+    capabilities:{context_length:m.contextTokenLimitForMaxMode??m.contextTokenLimit,supports_vision:m.supportsImages,supports_reasoning:m.supportsThinking}}));
 }

@@ -202,3 +202,13 @@ test('MAX selects the Claude 1M variant and keeps effort in both directions',()=
  assert.equal(meta.find(m=>m.id===picker.name).capabilities.context_length,1000000);
  assert.equal(meta.find(m=>m.id.endsWith('/haiku')).capabilities.context_length,200000);
 });
+
+test('picker separates standard and extended limits while runtime retains provider capacity',()=>{
+ const models=pickerModels(contextCatalog),provider=providerModels(contextCatalog);
+ for(const model of models){
+  assert.equal(model.contextTokenLimit,200000);
+  const maximum=model.supportsMaxMode?1000000:200000;
+  assert.equal(model.contextTokenLimitForMaxMode,maximum);
+  assert.equal(provider.find(p=>p.id===model.name).capabilities.context_length,maximum);
+ }
+});
