@@ -119,7 +119,7 @@ product.checksums['vs/workbench/workbench.desktop.main.js']=crypto.createHash('s
 pending.push({path:path.join(root,'product.json'),content:JSON.stringify(product,null,2)});
 const backupDir=path.join(dir,'backups',String(Date.now()));fs.mkdirSync(backupDir,{recursive:true});
 for(const [i,file] of pending.entries()){
-  if(file.path.endsWith('.js')){const candidate=path.join(backupDir,i+'.mjs');fs.writeFileSync(candidate,file.content);execFileSync(process.execPath,['--check',candidate],{windowsHide:true,stdio:'pipe'});fs.unlinkSync(candidate);}
+  if(file.path.endsWith('.js')){const candidate=path.join(backupDir,i+'.mjs');fs.writeFileSync(candidate,file.content);execFileSync(process.execPath,['--check',candidate],{stdio:'pipe'});fs.unlinkSync(candidate);}
 }
 if(process.argv.includes('--check')){console.log('Cursor 3.20.11 Claude patch candidates passed syntax and anchor checks.');process.exit();}
 const manifest={version,files:[],linked:[]};

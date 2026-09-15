@@ -21,3 +21,11 @@ const call=first.find(i=>i.type==='function_call');assert.ok(call);const args=JS
 const second=await infer({input:[prompt,...first,{type:'function_call_output',call_id:call.call_id,output:'42'}],tools,reasoning:{effort:'low'}});
 assert.match(second.filter(i=>i.type==='message').flatMap(i=>i.content).map(i=>i.text).join(''),/42/);
 console.log('Live Claude subscription tool call and result round trip: passed');
+// Cursor tool names overlap disabled Claude Code built-ins; automatic selection
+// must still return an external request rather than attempting a local tool.
+const external=[{type:'function',name:'Write',description:'Write a text file in the Cursor workspace.',parameters:{type:'object',properties:{path:{type:'string'},contents:{type:'string'}},required:['path','contents'],additionalProperties:false}}];
+const automatic=await infer({input:'Use Write to create cursor-bridge-probe.txt with the text EXTERNAL_TOOL_OK. The host will execute the request.',tools:external,tool_choice:'auto',reasoning:{effort:'low'}});
+const write=automatic.find(item=>item.type==='function_call');
+assert.equal(write?.name,'Write','Automatic selection must request the external Cursor tool.');
+assert.equal(JSON.parse(write.arguments).contents,'EXTERNAL_TOOL_OK');
+console.log('Automatic Cursor tool selection: passed (request only; no file written)');

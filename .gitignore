@@ -1,6 +1,7 @@
 node_modules/
 .state/
 .env*
+!.env.example
 auth.json
 .credentials.json
 config.json

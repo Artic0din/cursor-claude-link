@@ -2,32 +2,33 @@
 
 An experimental patch that adds your Claude Code models to Cursor and uses your existing Claude subscription sign-in. Cursor keeps its agent harness, tools and approval controls. No extension is installed.
 
-Companion project: [cursor-gpt-link](https://github.com/vertexitde/cursor-gpt-link).
+Companion project: [cursor-gpt-link](https://github.com/Artic0din/cursor-gpt-link).
 
 ## Status
 
 | Item | Current status |
 | --- | --- |
-| Client platform | Windows x64 |
-| Latest tested Cursor | 3.20.21, September 14, 2026; automated checks |
-| Cursor commit | `f09fca384ceca23f7bf21f9c23655b162641d740` |
-| Supported Cursor 3.20.11 | Commit `69d099d6568dc97e110ba8184614faf51c4040b0` |
-| Previous supported Cursor | 3.20.7, commit `979197d5570b168c034c634b3e21f2bea3ea5be0` |
-| Node.js used locally | 26.7.0 |
-| Claude Code used locally | 2.1.263, signed in with Claude Max |
-| Model selection and file edits | Confirmed manually after updating Cursor to 3.20.11 |
-| Bridge tool calls | Sonnet and Fable round trips verified before the Cursor update |
+| Client platform | macOS 26+ (Apple Silicon, arm64) |
+| Verified macOS Cursor | 3.20.17, September 15, 2026 |
+| Cursor commit | `0c32194e3fb5ffaced9fb36430b860ec301e1fc0` |
+| Node.js used locally | 25.2.1 |
+| Claude Code used locally | 2.1.270, signed in with Claude Max |
+| macOS signing | Hardened runtime, entitlements and native loading checked |
 | Context and effort | Forwarding checked in both runtime bundles; short requests tested with 200K and 1M |
 | IDE and Agents Window | Both bundles patched and syntax checked; separate manual coverage is not recorded |
 | Remote SSH | Local inference routing implemented; dedicated Claude SSH testing is still pending |
 | Subscription usage | Settings card implemented; retrieval can be unavailable |
 | Fast and Ultracode | Not implemented |
 
-Cursor 3.20.21 passed syntax, anchor, SSH routing, context and effort forwarding, and native stream-adapter checks. Standalone Claude and combined ChatGPT/Claude installations were verified on a separate local copy. A fresh manual UI test is pending for this build. Earlier live attachment and tool-call checks are documented separately. See [testing notes](docs/testing.md) for the exact coverage.
+Only Cursor 3.20.17 has verified macOS arm64 hashes in this release.
+Use a local workspace with the **This Mac** environment; cloud agents cannot reach these local bridges and are unsupported.
+The retained older and 3.20.21 metadata describes historical Windows builds and is rejected on macOS.
+See [testing notes](docs/testing.md) for current macOS results and separately labelled upstream history.
 
 Only the listed builds are supported. The installer checks version, commit, original JavaScript hashes and patch anchors. A matching local ChatGPT installation manifest can identify already patched files. Unknown changes stop installation.
 
-On Cursor 3.20.17 and 3.20.21, local subscription subagents also receive a missing parent Task entry before Cursor waits for its registration. The repair passed automated checks in both workbenches; a completed SSH subagent task still needs manual confirmation. See the testing notes for details.
+On Cursor 3.20.17, local subscription subagents also receive a missing parent Task entry before Cursor waits for its registration.
+The repair passed automated checks in both workbenches; a completed SSH subagent task still needs manual confirmation.
 
 ## What it adds
 
@@ -43,17 +44,17 @@ Effort levels come from model metadata: Low, Medium, High, Very high and Max whe
 
 ## Requirements
 
-- Windows x64 and a supported Cursor build.
-- Node.js 22 or newer on PATH. Local testing used 26.7.0.
+- macOS 26 or newer on Apple Silicon (arm64) and a supported Cursor build.
+- Node.js 22 or newer on PATH, including Intel Node running through Rosetta on an Apple Silicon Mac.
 - The native Claude Code executable and a Claude subscription sign-in with access to the requested models.
-- Permission to modify the Cursor installation.
+- A Cursor app owned by your macOS user and an existing Apple signing identity in Keychain.
 
 There are no npm dependencies. API-key-only authentication is not supported. Claude Code manages sign-in and token renewal; this project does not read credential files or import browser cookies.
 
 ## Install
 
-```powershell
-git clone https://github.com/vertexitde/cursor-claude-link.git
+```bash
+git clone https://github.com/Artic0din/cursor-claude-link.git
 cd cursor-claude-link
 npm run check
 claude auth login --claudeai
@@ -62,30 +63,43 @@ npm run doctor
 
 Skip the login command if Claude Code is already signed into the correct account. Complete browser sign-in yourself. `doctor` reports selected status and model fields, without printing credentials or account identifiers.
 
+Run `security find-identity -v -p codesigning` and set `CURSOR_MACOS_SIGN_IDENTITY` to the 40-character SHA-1 of the Apple identity to use.
+The selection is saved locally for later restoration.
 Close Cursor, then install:
 
-```powershell
+```bash
 npm run install:patch
 ```
 
-Start Cursor again and select a Claude model. The bridge starts with Cursor on `127.0.0.1:43188`. To start it manually, use `npm start`. If you applied the patch while Cursor was open, run **Developer: Reload Window** and start the bridge if needed.
+Start Cursor again and select a Claude model.
+The bridge starts with Cursor on `127.0.0.1:43188`.
+Startup failures are saved in the owner-only `.state/bridge-startup.log`.
+To start it manually, use `npm start`.
 
-The installer prefers `claude.exe` on PATH, matching the terminal, then tries the native install location. For custom locations, set these before the first installation:
+The installer patches the selected app directly; it does not make a full-app copy.
+It signs native binaries and the app bundle with the selected Apple identity while preserving entitlements and hardened-runtime flags.
+Signature verification and an Electron native-loading check must pass before installation succeeds.
+The app is restricted to its owner because patched bundles contain local bridge keys.
+Preflight leaves permissions unchanged; the restriction is applied only when the prepared patch is written.
 
-```powershell
-$env:CURSOR_APP_ROOT = 'D:\Apps\Cursor\resources\app'
-$env:CLAUDE_EXECUTABLE = 'D:\Tools\claude.exe'
+The installer prefers `claude` on PATH, matching the terminal, then tries `~/.local/bin/claude`. For custom locations, set these before the first installation:
+
+```bash
+export CURSOR_APP_ROOT="/Applications/Cursor.app/Contents/Resources/app"
+export CLAUDE_EXECUTABLE="/opt/homebrew/bin/claude"
 npm run check
 npm run install:patch
 ```
 
-`CURSOR_APP_ROOT` points to `resources/app`, not the folder containing `Cursor.exe`. Keep the same value for later status and restore commands. The chosen Claude executable is saved in local `config.json`.
+`CURSOR_APP_ROOT` points to `Contents/Resources/app`, not the `Cursor.app` bundle root. Keep the same value for later status and restore commands. The chosen Claude executable is saved in local `config.json`.
 
 Configuration, installation manifests and backups live in this clone and are ignored by Git. Keep the clone and Node.js at their installation paths while the patch is installed. Unlike cursor-gpt-link, this release does not copy its runtime into a separate state directory. To move the project, restore first and install again from the new location.
 
 ## Using it with ChatGPT
 
-Install [cursor-gpt-link](https://github.com/vertexitde/cursor-gpt-link) first, then this patch. Both patch the same Cursor bundles. The Claude installer preserves the existing ChatGPT changes and updates its installation hashes.
+Install [cursor-gpt-link](https://github.com/Artic0din/cursor-gpt-link) first, then this patch.
+Both patch the same Cursor bundles.
+The Claude installer discovers GPT's default macOS state directory, preserves its changes and updates its installation hashes.
 
 For removal or upgrades, restore Claude first, then restore ChatGPT if needed. Removing Claude returns Cursor to the state immediately before the Claude installation, which can include ChatGPT. Do not remove the underlying ChatGPT patch first and assume the Claude manifest still matches.
 
@@ -93,20 +107,28 @@ Custom public ChatGPT state directories are recognized through `CURSOR_GPT_LINK_
 
 ## Check, update or remove
 
-```powershell
+```bash
 npm run status
 npm run uninstall
 ```
 
-These correspond to `node patcher.mjs status` and `node patcher.mjs restore`. Status verifies installed-file and backup hashes. Restore refuses to overwrite changed files. Backups remain available.
+These correspond to `node patcher.mjs status` and `node patcher.mjs restore`.
+Status verifies the app signature and file hashes.
+Restore validates the six file backups, restores the resources and signs the app again before reporting success.
+An interrupted restore can be retried while the manifest remains present.
+Restore refuses to overwrite unrelated changed files.
+New manifests record the original app permissions and restore them after standalone removal; a remaining GPT patch keeps the app private.
+Older manifests without this record retain the current permissions until official reinstallation.
+Reinstall official Cursor to recover its original vendor signature or if signing cannot be completed, then install GPT followed by Claude again.
+Installation archives stale state only after recognizing the freshly installed app or a valid GPT installation.
 
-For a normal project update, close Cursor, restore the patch, run `git pull`, then install again. An already running bridge can remain after restore until stopped or Windows is restarted. Do not share its local key or configuration.
+For a normal project update, close Cursor, restore the patch, run `git pull`, then install again. An already running bridge can remain after restore until stopped or the Mac is restarted. Do not share its local key or configuration.
 
 Cursor updates can replace the patched files. **Do not restore old backups over a newer Cursor build.** Check the supported version table and follow [the update notes](docs/testing.md#cursor-updates). There is no force option.
 
 ## Remote SSH
 
-Inference runs on the local PC through Cursor's dedicated local runtime. Cursor's existing workspace path handles tools on the SSH host. The remote machine should not need Claude Code, copied credentials or a forwarded bridge port.
+Inference runs on the local Mac through Cursor's dedicated local runtime. Cursor's existing workspace path handles tools on the SSH host. The remote machine should not need Claude Code, copied credentials or a forwarded bridge port.
 
 This routing is implemented in both workbenches. Claude-specific end-to-end SSH validation is still pending; the successful SSH tests in cursor-gpt-link do not establish Claude coverage.
 
@@ -134,7 +156,7 @@ In particular, [Fable can use usage credits on some plans](https://code.claude.c
 - Ultracode is not an effort level above Max. It combines xhigh reasoning with Claude Code's dynamic workflow orchestration. That orchestration is not implemented in this Cursor adapter, so no misleading Ultracode option is shown. See [Claude's model configuration](https://code.claude.com/docs/en/model-config#adjust-effort-level).
 - Initial model entries are embedded during installation. A failed catalog refresh can leave stale entries visible; the provider still decides whether a request is accepted.
 - Claude Code authentication, catalog and usage behavior can change separately from Cursor. A refresh-lock error can require retrying later or signing in again through Claude Code.
-- Cloud agents, macOS and Linux clients are unsupported. Separate manual coverage of both Cursor windows and SSH is still needed.
+- Cloud agents, Windows and Linux clients are unsupported. Only macOS 26+ on Apple Silicon is supported. Separate manual coverage of both Cursor windows and SSH is still needed.
 
 ## Reconnecting or failed requests
 
@@ -160,7 +182,7 @@ An existing conversation keeps its saved context value until the next successful
 
 ## Development
 
-```powershell
+```bash
 npm test
 npm run check:source
 ```

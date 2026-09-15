@@ -8,5 +8,7 @@
     "extensions/cursor-local-agent-runtime/dist/main.js": "ae9790579ed37d4707a60eb6edb8fffb70b7a3baf3a4b7863b9f50e2c5795f17",
     "out/main.js": "1bffbf47651bbcc7c530a3d0b7f2a3436f6443a7a83758ed0385c7b6099e0ccf",
     "product.json": "fd73c863c002f153b8bfea0bcc028ada256858fffacb6638d66cc3f399ce746d"
-  }
+  },
+  "platform": "win32",
+  "arch": "x64"
 }

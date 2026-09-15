@@ -6,7 +6,7 @@ import {sanitizeModels} from './catalog.mjs';
 import {formatPlan, parseReset, parseUsageWindows, zonedDateToEpoch} from './usage.mjs';
 import {usageSectionSrc} from './usage-section.mjs';
 import {withSubscriptionPickerSections, patchPickerSections} from './picker-sections.mjs';
-import {bridgeCommandPattern, buildBridgeLauncher} from './autostart.mjs';
+import {bridgeCommandPattern, bridgeCommandPosixPattern, buildBridgeLauncher} from './autostart.mjs';
 const catalog=sanitizeModels([
  {value:'sonnet',displayName:'Sonnet',supportsEffort:true,supportedEffortLevels:['low','medium','high','xhigh','max']},
  {value:'fable',displayName:'Fable',supportsEffort:true,supportedEffortLevels:['high','max']},
@@ -20,9 +20,17 @@ test('subscription environment removes API keys and third-party provider overrid
 test('conversation and tool results survive request preparation',()=>{
   const input=[{role:'user',content:'Add 19 and 23'}, {type:'function_call',call_id:'test-call',name:'add',arguments:'{"a":19,"b":23}'}, {type:'function_call_output',call_id:'test-call',output:'42'}];
   const value=prepareRequest({model:'claude-subscription/sonnet',input,tools:[{type:'function',name:'add',parameters:{type:'object'}}],tool_choice:{type:'function',name:'add'},parallel_tool_calls:false});
-  assert.deepEqual(JSON.parse(value.prompt).conversation,input);
+  assert.deepEqual(JSON.parse(value.prompt).conversation,[input[0],{...input[1],name:'cursor_tool_0'},input[2]]);
   assert.equal(value.schema.properties.tool_calls.minItems,1);
   assert.equal(value.schema.properties.tool_calls.maxItems,1);
+});
+test('external tool names cannot collide with disabled Claude Code built-ins',()=>{
+  const value=prepareRequest({model:'claude-subscription/sonnet',input:'Write a file.',tools:[{type:'function',name:'Write',description:'Write a file.',parameters:{type:'object'}}],tool_choice:{type:'function',name:'Write'}});
+  const prompt=JSON.parse(value.prompt);
+  assert.equal(prompt.availableTools[0].name,'cursor_tool_0');
+  assert.equal(prompt.availableTools[0].cursorName,'Write');
+  assert.equal(prompt.toolChoice.name,'cursor_tool_0');
+  assert.deepEqual(value.schema.properties.tool_calls.items.properties.name.enum,['cursor_tool_0']);
 });
 test('invalid attachments, models and Fast mode fail explicitly',()=>{
   assert.throws(()=>prepareRequest({model:'other',input:[]}));
@@ -133,15 +141,32 @@ test('usage settings card fetches the local Claude usage route',()=>{
   assert.match(src,/Next reset/);
 });
 test('autostart restarts only the Claude bridge worker',()=>{
-  const nodePath='C:\\Program Files\\nodejs\\node.exe';
-  const bridgePath='C:\\Users\\example\\cursor-claude-link\\bridge.mjs';
+  const nodePath='/usr/local/bin/node';
+  const bridgePath='/Users/example/cursor-claude-link/bridge.mjs';
   assert.match(bridgeCommandPattern(nodePath,bridgePath),/cursor-claude-link/);
+  assert.equal(bridgeCommandPosixPattern(nodePath,bridgePath).includes('\\s'),false);
+  assert.match(bridgeCommandPosixPattern(nodePath,bridgePath),/\[\[:space:\]\]/);
   const src=buildBridgeLauncher({nodePath,bridgePath,port:43188});
   assert.match(src,/cursor-claude-link/);
-  const encoded=src.match(/EncodedCommand","([^"]+)/)[1];
-  const decoded=Buffer.from(encoded,'base64').toString('utf16le');
-  assert.equal(decoded.includes('Get-NetTCPConnection'),false);
-  assert.equal(decoded.includes('-like'),false);
-  assert.match(decoded,/cursor-claude-link/);
-  assert.equal(decoded.includes('cursor-gpt-link'),false);
+  assert.match(src,/pkill",\["-f"/);
+  assert.match(src,/\[\[:space:\]\]/);
+  assert.equal(src.includes('\\s'),false);
+  assert.match(src,/process\.platform==="darwin"/);
+  assert.equal(src.includes('powershell'),false);
+  assert.equal(src.includes('windowsHide'),false);
+  assert.equal(src.includes('win32'),false);
+  assert.equal(src.includes('cursor-gpt-link'),false);
+});
+test('installer rejects non-macOS Apple Silicon clients',async()=>{
+  const {assertSupportedClient,macOSProductVersion}=await import('./build-support.mjs');
+  const {machineArch}=await import('./macos.mjs');
+  const build={platform:'darwin',arch:'arm64',osMinimum:'26.0'};
+  if(process.platform==='darwin'&&machineArch()==='arm64'){
+    const version=macOSProductVersion();
+    const major=Number(String(version||'').split('.')[0]);
+    if(Number.isFinite(major)&&major>=26)assert.doesNotThrow(()=>assertSupportedClient(build));
+    else assert.throws(()=>assertSupportedClient(build),/macOS 26\+/);
+  }else{
+    assert.throws(()=>assertSupportedClient(build),/macOS 26\+/);
+  }
 });

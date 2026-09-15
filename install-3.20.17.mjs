@@ -14,6 +14,7 @@ import {findClaude} from './cli-path.mjs';
 import {usageSectionSrc} from './usage-section.mjs';
 import {pickerSectionHelpersSrc, patchPickerSections} from './picker-sections.mjs';
 import {buildAutostart} from './autostart.mjs';
+import {requireWritableApp,setAppMode} from './macos.mjs';
 
 const dir=path.dirname(fileURLToPath(import.meta.url));
 const root=cursorRoot();
@@ -22,15 +23,15 @@ const hash=value=>crypto.createHash('sha256').update(value).digest('hex');
 const linkedManifests=linkedGptManifests();
 if(process.argv.includes('--restore')){
   const manifest=JSON.parse(fs.readFileSync(manifestPath,'utf8'));
-  for(const f of manifest.files){if(hash(fs.readFileSync(f.path))!==f.patchedHash||hash(fs.readFileSync(f.backup))!==f.originalHash)throw new Error('Files changed. Restore stopped: '+f.path);}
+  for(const f of manifest.files){const current=hash(fs.readFileSync(f.path));if((current!==f.patchedHash&&current!==f.originalHash)||hash(fs.readFileSync(f.backup))!==f.originalHash)throw new Error('Files changed. Restore stopped: '+f.path);}
   for(const f of manifest.files)fs.copyFileSync(f.backup,f.path);
   for(const linked of manifest.linked){
     const current=JSON.parse(fs.readFileSync(linked.path,'utf8'));
     for(const entry of current.files){const restored=manifest.files.find(f=>f.path===entry.path);if(restored)entry.patchedHash=restored.originalHash;}
+    delete current.claudeManifest;
     fs.writeFileSync(linked.path,JSON.stringify(current,null,2));
   }
-  fs.renameSync(manifestPath,manifestPath+'.restored-'+Date.now());
-  console.log('Claude patch removed. Reload Cursor.');process.exit();
+  console.log('Claude resource files restored.');process.exit();
 }
 if(fs.existsSync(manifestPath))throw new Error('Claude patch already installed. Restore before reinstalling.');
 const product=JSON.parse(fs.readFileSync(path.join(root,'product.json'),'utf8'));
@@ -123,12 +124,13 @@ product.checksums['vs/workbench/workbench.desktop.main.js']=crypto.createHash('s
 pending.push({path:path.join(root,'product.json'),content:JSON.stringify(product,null,2)});
 const backupDir=path.join(dir,'backups',String(Date.now()));fs.mkdirSync(backupDir,{recursive:true});
 for(const [i,file] of pending.entries()){
-  if(file.path.endsWith('.js')){const candidate=path.join(backupDir,i+'.mjs');fs.writeFileSync(candidate,file.content);execFileSync(process.execPath,['--check',candidate],{windowsHide:true,stdio:'pipe'});fs.unlinkSync(candidate);}
+  if(file.path.endsWith('.js')){const candidate=path.join(backupDir,i+'.mjs');fs.writeFileSync(candidate,file.content);execFileSync(process.execPath,['--check',candidate],{stdio:'pipe'});fs.unlinkSync(candidate);}
 }
 if(process.argv.includes('--check')){console.log('Cursor 3.20.17 Claude patch candidates passed syntax and anchor checks.');process.exit();}
-const manifest={version,files:[],linked:[]};
+const manifest={version,files:[],linked:[],appMode:requireWritableApp(root)};
 for(const manifestFile of linkedManifests.filter(f=>fs.existsSync(f))){
   const text=fs.readFileSync(manifestFile,'utf8'),linked=JSON.parse(text);
+  if(!linked.files.some(file=>file.path.startsWith(root+path.sep)))continue;
   for(const f of linked.files)if(hash(fs.readFileSync(f.path))!==f.patchedHash)throw new Error('Existing GPT manifest does not match current files.');
   manifest.linked.push({path:manifestFile,original:text});
 }
@@ -138,7 +140,8 @@ for(const [i,file] of pending.entries()){
 }
 fs.writeFileSync(manifestPath,JSON.stringify(manifest,null,2));
 try{
+  setAppMode(root,0o700);
   for(const file of pending)fs.writeFileSync(file.path,file.content);
-  for(const linked of manifest.linked){const value=JSON.parse(linked.original);for(const f of value.files){const changed=manifest.files.find(x=>x.path===f.path);if(changed)f.patchedHash=changed.patchedHash;}fs.writeFileSync(linked.path,JSON.stringify(value,null,2));}
-}catch(error){for(const f of manifest.files)fs.copyFileSync(f.backup,f.path);for(const f of manifest.linked)fs.writeFileSync(f.path,f.original);fs.renameSync(manifestPath,manifestPath+'.rolled-back');throw error;}
+  for(const linked of manifest.linked){const value=JSON.parse(linked.original);for(const f of value.files){const changed=manifest.files.find(x=>x.path===f.path);if(changed)f.patchedHash=changed.patchedHash;}value.claudeManifest=manifestPath;fs.writeFileSync(linked.path,JSON.stringify(value,null,2));}
+}catch(error){for(const f of manifest.files)fs.copyFileSync(f.backup,f.path);for(const f of manifest.linked)fs.writeFileSync(f.path,f.original);setAppMode(root,manifest.appMode);fs.renameSync(manifestPath,manifestPath+'.rolled-back');throw error;}
 console.log('Claude subscription models installed. Reload Cursor to activate.');

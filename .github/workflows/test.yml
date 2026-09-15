@@ -1,17 +1,32 @@
 name: Tests
-on: [push, pull_request]
+
+on:
+  push:
+  pull_request:
+
 permissions:
   contents: read
+
 jobs:
   test:
-    runs-on: windows-latest
+    runs-on: macos-26
     strategy:
       matrix:
-        node: [22, 24]
+        node: [22, 24, 26]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
+      - name: Require macOS 26+ Apple Silicon
+        run: |
+          version="$(sw_vers -productVersion)"
+          major="${version%%.*}"
+          arch="$(uname -m)"
+          echo "Detected macOS $version ($arch)"
+          if [ "$major" -lt 26 ] || [ "$arch" != "arm64" ]; then
+            echo "Only macOS 26+ (Apple Silicon) is supported"
+            exit 1
+          fi
       - run: npm test
       - run: node scripts/check-source.mjs
