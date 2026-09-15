@@ -80,6 +80,7 @@ The installer patches the selected app directly; it does not make a full-app cop
 It signs native binaries and the app bundle with the selected Apple identity while preserving entitlements and hardened-runtime flags.
 Signature verification and an Electron native-loading check must pass before installation succeeds.
 The app is restricted to its owner because patched bundles contain local bridge keys.
+Preflight leaves permissions unchanged; the restriction is applied only when the prepared patch is written.
 
 The installer prefers `claude` on PATH, matching the terminal, then tries `~/.local/bin/claude`. For custom locations, set these before the first installation:
 
@@ -116,6 +117,8 @@ Status verifies the app signature and file hashes.
 Restore validates the six file backups, restores the resources and signs the app again before reporting success.
 An interrupted restore can be retried while the manifest remains present.
 Restore refuses to overwrite unrelated changed files.
+New manifests record the original app permissions and restore them after standalone removal; a remaining GPT patch keeps the app private.
+Older manifests without this record retain the current permissions until official reinstallation.
 Reinstall official Cursor to recover its original vendor signature or if signing cannot be completed, then install GPT followed by Claude again.
 Installation archives stale state only after recognizing the freshly installed app or a valid GPT installation.
 

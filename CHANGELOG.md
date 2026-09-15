@@ -10,6 +10,7 @@ The format follows Keep a Changelog.
 - Enabled installation in Cursor 3.20.17 on macOS Apple Silicon with verified Mac hashes and Apple code signing that preserves hardened runtime and entitlements.
 - Kept restoration retryable through signing failures and preserved a companion ChatGPT installation when removing Claude.
 - Preserved the active restoration manifest when a combined installation is installed again.
+- Checked the installed executable for Apple Silicon support and restored recorded app permissions after standalone removal.
 - Corrected companion discovery, Rosetta detection, exact bridge restart matching and private startup diagnostics.
 - Routed Cursor tool requests through distinct transport names so Claude does not confuse them with its disabled built-in tools.
 

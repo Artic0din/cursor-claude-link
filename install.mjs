@@ -3,7 +3,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {execFileSync} from 'node:child_process';
 import {cursorRoot,getBuild,requireSupportedOriginals,sha256} from './build-support.mjs';
-import {requireClosedCursor,requireWritableApp,signingIdentity,verifyMacSignature,signMacApp} from './macos.mjs';
+import {requireClosedCursor,requireWritableApp,signingIdentity,verifyMacSignature,signMacApp,setAppMode} from './macos.mjs';
 
 const dir=path.dirname(fileURLToPath(import.meta.url)),root=cursorRoot(),build=getBuild(root);
 const restore=process.argv.includes('--restore'),manifestPath=path.join(dir,'installed.json'),configPath=path.join(dir,'config.json');
@@ -34,7 +34,11 @@ if(!restore){
 }
 console.log('Signing Cursor and checking native loading...');
 signMacApp(root,identity);
-if(restore)fs.renameSync(manifestPath,manifestPath+'.restored-'+Date.now());
+if(restore){
+  const manifest=JSON.parse(fs.readFileSync(manifestPath,'utf8'));
+  setAppMode(root,manifest.linked.length?0o700:manifest.appMode);
+  fs.renameSync(manifestPath,manifestPath+'.restored-'+Date.now());
+}
 else{
   const manifest=JSON.parse(fs.readFileSync(manifestPath,'utf8'));
   for(const file of manifest.files)if(sha256(fs.readFileSync(file.path))!==file.patchedHash)throw new Error('Installed file verification failed: '+file.path);

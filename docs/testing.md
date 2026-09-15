@@ -13,7 +13,7 @@ A matching version label alone is insufficient to establish compatibility.
 
 ## Current checks
 
-All 47 local tests passed, covering bridge error handling, external tool naming, attachments, token accounting, subagent registration, exact POSIX process matching and startup after the launching host exits.
+All 48 local tests passed, covering bridge error handling, external tool naming, attachments, token accounting, subagent registration, exact POSIX process matching and startup after the launching host exits.
 Repeating a combined installation is rejected before its active restoration manifest can be archived; the regression also permits a GPT-only installation.
 The repeated-install check also passed against the real combined app, leaving both manifests and all six app resources unchanged.
 
@@ -29,6 +29,9 @@ That check requests a write without executing it; the final post-fix Cursor file
 
 Signing fixtures verify preservation of hardened runtime and entitlements after patching and resource restoration.
 The fixture uses a disposable executable and an injected test signer; production requires an available Apple identity and refuses ad-hoc signing.
+The checks also reject a correctly signed Intel-only executable and verify permission preservation during preflight and signed restoration.
+New manifests save the original app mode; standalone removal restores it, while removing Claude over GPT keeps the app private.
+Legacy manifests without an original mode retain current permissions; official reinstallation recovers the vendor defaults.
 No full-app backup is required; six resource backups and recovery manifests are retained.
 
 Combined removal was tested on the real app: GPT refused removal before Claude, Claude restoration preserved GPT, and final GPT restoration recovered all six original resource hashes.
