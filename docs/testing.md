@@ -1,115 +1,73 @@
 # Testing and compatibility
 
-## Supported clients
+## Verified macOS build
 
-| Version | Commit | Platform |
-| --- | --- | --- |
-| 3.20.21 | `f09fca384ceca23f7bf21f9c23655b162641d740` | macOS 26+ arm64 |
-| 3.20.17 | `0c32194e3fb5ffaced9fb36430b860ec301e1fc0` | macOS 26+ arm64 |
-| 3.20.11 | `69d099d6568dc97e110ba8184614faf51c4040b0` | macOS 26+ arm64 |
-| 3.20.7 | `979197d5570b168c034c634b3e21f2bea3ea5be0` | macOS 26+ arm64 |
+The September 15, 2026 checks used macOS 27.0 on Apple Silicon, Node.js 25.2.1 and Cursor 3.20.17.
+The exact Cursor commit is `0c32194e3fb5ffaced9fb36430b860ec301e1fc0`.
+The minimum supported OS is macOS 26; live application checks were performed on macOS 27.
+Claude Code 2.1.270 was signed into a Claude subscription.
 
-The build JSON files record SHA-256 hashes of original JavaScript bundles. Version-specific installers also require unique patch anchors and run Node.js syntax checks before writing application files. Existing GPT installations are accepted only through a matching local installation manifest.
+[The 3.20.17 metadata](../build-3.20.17.json) records six hashes captured from the original, signature-verified Mac application.
+Older metadata and the 3.20.21 metadata describe Windows bundles and are rejected on macOS.
+A matching version label alone is insufficient to establish compatibility.
 
-The public source check and unit tests do not require Cursor or Claude sign-in. They cover environment handling, model and context mapping, function-call preparation, usage parsing, picker sections and exact bridge-process matching. CI runs these on macOS 26 (Apple Silicon) with Node.js 22, 24 and 26. Local verification used Node.js 26.7.0; CI results are separate evidence.
+## Current checks
 
-## Cursor 3.20.21 update
+All 46 local tests passed, covering bridge error handling, external tool naming, attachments, token accounting, subagent registration, exact POSIX process matching and startup after the launching host exits.
 
-On September 14, 2026, the patch anchors and referenced symbols were reviewed against Cursor commit `f09fca384ceca23f7bf21f9c23655b162641d740`. The model mapper, picker renderer, usage components, dedicated-runtime activation and Task bubble parameters have new identifiers. Version-specific definitions preserve support for the preceding builds.
+Both links installed directly in `/Applications/Cursor.app`, GPT first and Claude second, with an existing Apple signing identity.
+Strict signature verification, Electron native loading and both installation manifests passed after combined installation.
+Both bridge workers started automatically with Cursor and appeared in the native model picker.
+Cloud agents are unsupported: use a local workspace and the This Mac environment.
 
-The following checks passed against local copies of the exact new bundles:
+A native Claude file-edit request reproduced a collision between Cursor tool names and disabled Claude Code built-ins.
+After assigning distinct transport names, replaying that captured request returned the expected Cursor `Write` call.
+The live subscription check passed a function-call/result round trip and automatic selection of an external `Write` tool.
+That check requests a write without executing it; the final post-fix Cursor file edit and readback remains pending because desktop automation could not unlock the Mac.
 
-- Unique patch anchors and JavaScript syntax in both workbenches, both agent runtimes and the main process.
-- Native SSH routing with workspace execution resources and cancellation preserved.
-- Reasoning and Fast forwarding for ChatGPT, and effort plus 200K/1M context forwarding for Claude.
-- Native subagent registration and model inheritance, including reproductions of the missing Task bubble and empty model failures.
-- Both native Responses adapters with timeout, sign-in and quota errors, plus a successful tool call. The probe now accepts native identifiers containing a dollar sign.
-- Standalone Claude, standalone ChatGPT, and combined installations; linked hashes and exact restoration of the original files after uninstall.
+Signing fixtures verify preservation of hardened runtime and entitlements after patching and resource restoration.
+The fixture uses a disposable executable and an injected test signer; production requires an available Apple identity and refuses ad-hoc signing.
+No full-app backup is required; six resource backups and recovery manifests are retained.
 
-Both patches were installed locally after those checks. Installed-file and backup hashes matched. The ChatGPT native build checks and Claude Responses-adapter checks were also repeated successfully against Cursor 3.20.17. These are controlled automated checks; a fresh manual IDE, Agents Window and SSH test remains pending for 3.20.21.
+Combined removal was tested on the real app: GPT refused removal before Claude, Claude restoration preserved GPT, and final GPT restoration recovered all six original resource hashes.
+Both restoration steps passed strict signature verification and native loading.
 
-The reviewed 3.20.21 hashes are in [the build metadata](../build-3.20.21.json).
-
-## Cursor 3.20.17 update
-
-On September 12, 2026, the desktop and Agents Window model mapping, picker rendering, usage components and dedicated-runtime symbols were updated for this exact build. The new metadata also verifies the original `product.json`. All 28 unit tests, source checks and both native Responses adapter checks passed. The adapter checks cover timeout, sign-in and quota errors, plus a successful function call.
-
-Standalone Claude and combined ChatGPT/Claude installations passed syntax and unique-anchor checks on a separate local copy. Both native workbench routing methods retained SSH workspace execution resources and cancellation signals. Every supported effort value was checked with both 200K and 1M forwarding. Both patches were then installed locally, and all installation, linked-manifest and backup hashes matched. These are automated checks; a new manual IDE, Agents Window and SSH test is still pending.
-
-## Manual and live checks
-
-On September 10, 2026, Sonnet and Fable produced function calls through the bridge and used the returned tool result. Short Sonnet requests succeeded with both 200K and 1M selected. This does not test a full one-million-token workload.
-
-On September 11, 2026, both patches were installed on Cursor 3.20.11. Generated JavaScript passed syntax checks and installation hashes matched. The user confirmed model selection and a file edit after reload. That confirmation did not specify the provider or distinguish IDE from Agents Window coverage.
-
-The automated Claude test on 3.20.11 reported a concurrent OAuth token-refresh error. Usage retrieval was also unavailable during that check. Those tests are not marked as passing. Claude SSH file edits, separate window coverage, approvals and cancellation still need dedicated manual tests.
-
-## Cursor updates
-
-1. Close Cursor and check the newly installed version against the supported table.
-2. Run `npm run status`. If it reports old-version state, do not force a restore.
-3. Confirm Cursor has replaced the old patched files. Preserve the old backups and move `installed.json` out of the way, for example to `installed.json.before-update`.
-4. Run `npm run check`. Proceed only if the new original hashes are recognized. Modified or mixed-version installations need repair through the normal Cursor installer first.
-5. Install the supported ChatGPT patch first if used, then install Claude again.
-
-Do not edit the supported version number or hash list to bypass verification. A new build needs separate anchor review and testing.
-
-## Live test
-
-With the local bridge running:
+## Repeatable checks
 
 ```bash
-npm run test:live
-```
-
-This makes real requests and consumes usage. It requires a function call for adding two numbers, supplies the result and verifies the final reply. It does not edit workspace files. It tests the bridge, not the complete Cursor UI.
-
-## Reconnect regression check
-
-On September 11, 2026, the original `response.failed` behavior was reproduced against the installed Cursor 3.20.11 Responses adapters and incomplete-stream guards in both runtime bundles. The corrected bridge passed synthetic timeout, login and quota-error cases, and a successful function-call response. HTTP tests also verify cancellation and request-slot cleanup. These checks do not establish an SSH file-edit result.
-
-To run the installed adapter checks without model requests:
-
-```bash
+npm test
+npm run check:source
+npm run status
 npm run check:runtime -- "/Applications/Cursor.app/Contents/Resources/app"
+npm run check:subagents -- "/Applications/Cursor.app/Contents/Resources/app"
 ```
 
-This reads supported installed code and exercises it with synthetic inputs. It does not modify the application or send network requests beyond loopback.
+Unit and source checks do not require account sign-in or model requests.
+Runtime checks inspect the supported installed bundles and exercise synthetic responses and registration paths.
+CI runs unit tests on macOS 26 with Node.js 22, 24 and 26; those runners do not contain a real Cursor installation.
 
-Catalog discovery also passed a live check with a clean CLI exit. After the stream correction, the live tool-round-trip test exposed the OAuth refresh-lock error. A later official `claude auth status --json` call returned `loggedIn: false` and `authMethod: none`; a new local sign-in is required before live inference and SSH validation can finish. No live round-trip success is claimed for this repair.
+With the bridge running, `npm run test:live` checks a function call, returned tool result and automatic external tool selection.
+`npm run test:attachments` checks image and PDF content.
+These optional commands consume subscription usage and do not prove complete Cursor UI coverage.
 
-## Attachment support
+## Cursor updates and recovery
 
-On September 11, 2026, the updated Sonnet adapter read the color of a generated PNG and a validation word embedded only in a PDF. Both passed through the running local subscription bridge. The standard function-call and tool-result round trip also passed with the new streaming JSON input format. Unit tests cover byte preservation, history references, multimodal tool results, UTF-8 documents, invalid data, URL handling and CLI result parsing. This supersedes the earlier text-only limitation. These bridge tests do not establish drag-and-drop coverage for every format or a new SSH UI test.
+1. Close Cursor and restore Claude before restoring GPT.
+2. Restore validates every resource backup before writing and re-signs the app before reporting success.
+3. Retry an interrupted restore while its manifest remains present; unknown file changes stop restoration.
+4. Reinstall official Cursor to recover its vendor signature or a failed signing operation.
+5. Install GPT followed by Claude on the recognized build; stale manifests are archived only after original files or a valid companion installation are verified.
 
-The implementation follows [Claude SDK streaming input](https://code.claude.com/docs/en/agent-sdk/streaming-vs-single-mode) and [Claude PDF content blocks](https://platform.claude.com/docs/en/build-with-claude/pdf-support).
+Never restore old resources over a newer build or edit hashes to bypass compatibility checks.
+A new Mac build needs original-file capture, anchor review and separate validation.
+The six resource backups do not contain the original vendor code signature.
 
-## Context token accounting
+## Historical upstream results and remaining coverage
 
-The context correction passed 28 unit tests and the installed Cursor 3.20.11 runtime checks. A synthetic three-step turn with 200,000 cumulative input tokens reports the final 69,000-token prompt instead of the cumulative total. Coverage includes repeated message IDs, subagents, cached tokens, separate result boundaries and output-count fallbacks.
+Earlier September 10–14 notes were inherited from the Windows implementation.
+They described bridge tool calls, image/PDF input, token accounting and synthetic desktop, Agents Window and SSH routing.
+They do not establish macOS installer, GUI, authentication renewal or SSH coverage.
+The preceding test history remains in Git.
 
-In a live Claude Opus check on September 11, 2026, two visually identical 512 by 512 PNGs of 1,497 and 787,127 bytes both used 1,794 input tokens and 79 output tokens. Both were understood correctly. This checks that image encoding size does not turn into text-token occupancy. The affected existing conversation still needs a new response to refresh its saved UI value.
-
-See [Claude SDK usage scopes](https://code.claude.com/docs/en/agent-sdk/cost-tracking) for the distinction between per-step input usage and cumulative turn usage.
-
-
-## Local Claude subagent startup
-
-On September 13, 2026, the missing parent Task bubble reported for ChatGPT was also reproduced with a Claude model ID in Cursor 3.20.17's native desktop and Agents Window registration methods. This was a controlled reproduction, not a recorded Claude SSH session failure.
-
-The Claude patch now creates a missing Task bubble through Cursor's existing ToolFormer method when both the request and the loaded parent use Claude subscription models. Existing bubbles, cancellation and the normal registration barrier are preserved. Missing parents or capabilities still fail through the original path.
-
-All 36 Claude unit tests passed. Native registration checks passed for standalone Claude and combined ChatGPT/Claude candidates in both workbenches. Combined installation and uninstall checks verified linked manifests, backups and byte-for-byte restoration of the original build. A completed live subagent task in the SSH Agents Window still needs manual confirmation.
-
-Run the check:subagents npm script with the patched Cursor resources/app path to repeat the native registration check without model requests.
-
-
-### Empty optional model on the first attempt
-
-The later ChatGPT SSH session contained a separate failure after reload: Task calls supplied an empty model string and failed native validation. The next attempts selected a model successfully and started local subagents. This confirms successful startup after retries, not reliable first-attempt behavior before the additional repair.
-
-For this subscription provider, an empty or whitespace-only requested model is now normalized to an omitted selection before the native resolver runs. Cursor still chooses the inherited, configured or forced model and checks availability. Explicit models and other providers retain native validation. Both runtime resolvers passed a reproduced empty-string failure, inheritance, configured defaults, forced-model handling and blocked-model checks. A new live test of the first attempt after this additional repair is still pending.
-
-### Bridge startup after the launching process exits
-
-A detached launcher now owns the complete stop/start sequence. macOS regression tests cover cold startup and replacement of an existing fixture worker after the launching process exits immediately. Previously the restart callback belonged to the exiting host. These checks use temporary workers, not account credentials or model requests. Both local usage endpoints were checked separately; the Agents Window display still requires a manual check.
+Fresh macOS SSH file edits, live subagents, cancellation, fresh sign-in/renewal and large-context workloads remain unverified.
+Fast and Ultracode are not implemented.

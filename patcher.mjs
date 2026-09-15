@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import {cursorRoot,getBuild,requireSupportedOriginals,sha256} from './build-support.mjs';
+import {verifyMacSignature} from './macos.mjs';
 
 const command=process.argv[2]||'help';
 const manifestFile=new URL('./installed.json',import.meta.url);
@@ -8,6 +9,7 @@ try {
     console.log('Usage: node patcher.mjs check|status|install|restore\nSet CURSOR_APP_ROOT for a custom Cursor resources/app directory.\nRun node doctor.mjs to check Claude Code sign-in and model discovery.');
   }else if(command==='check'||command==='status'){
     const root=cursorRoot(),build=getBuild(root);
+    verifyMacSignature(root);
     if(fs.existsSync(manifestFile)){
       const manifest=JSON.parse(fs.readFileSync(manifestFile,'utf8'));
       if(manifest.version!==build.version)throw new Error('Cursor was updated. The installation manifest belongs to '+manifest.version+'. Do not restore old files over the update. See docs/testing.md.');

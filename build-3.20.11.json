@@ -9,7 +9,6 @@
     "out/main.js": "1bffbf47651bbcc7c530a3d0b7f2a3436f6443a7a83758ed0385c7b6099e0ccf",
     "product.json": "fd73c863c002f153b8bfea0bcc028ada256858fffacb6638d66cc3f399ce746d"
   },
-  "platform": "darwin",
-  "arch": "arm64",
-  "osMinimum": "26.0"
+  "platform": "win32",
+  "arch": "x64"
 }

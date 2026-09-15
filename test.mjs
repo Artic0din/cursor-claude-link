@@ -20,9 +20,17 @@ test('subscription environment removes API keys and third-party provider overrid
 test('conversation and tool results survive request preparation',()=>{
   const input=[{role:'user',content:'Add 19 and 23'}, {type:'function_call',call_id:'test-call',name:'add',arguments:'{"a":19,"b":23}'}, {type:'function_call_output',call_id:'test-call',output:'42'}];
   const value=prepareRequest({model:'claude-subscription/sonnet',input,tools:[{type:'function',name:'add',parameters:{type:'object'}}],tool_choice:{type:'function',name:'add'},parallel_tool_calls:false});
-  assert.deepEqual(JSON.parse(value.prompt).conversation,input);
+  assert.deepEqual(JSON.parse(value.prompt).conversation,[input[0],{...input[1],name:'cursor_tool_0'},input[2]]);
   assert.equal(value.schema.properties.tool_calls.minItems,1);
   assert.equal(value.schema.properties.tool_calls.maxItems,1);
+});
+test('external tool names cannot collide with disabled Claude Code built-ins',()=>{
+  const value=prepareRequest({model:'claude-subscription/sonnet',input:'Write a file.',tools:[{type:'function',name:'Write',description:'Write a file.',parameters:{type:'object'}}],tool_choice:{type:'function',name:'Write'}});
+  const prompt=JSON.parse(value.prompt);
+  assert.equal(prompt.availableTools[0].name,'cursor_tool_0');
+  assert.equal(prompt.availableTools[0].cursorName,'Write');
+  assert.equal(prompt.toolChoice.name,'cursor_tool_0');
+  assert.deepEqual(value.schema.properties.tool_calls.items.properties.name.enum,['cursor_tool_0']);
 });
 test('invalid attachments, models and Fast mode fail explicitly',()=>{
   assert.throws(()=>prepareRequest({model:'other',input:[]}));
@@ -151,12 +159,14 @@ test('autostart restarts only the Claude bridge worker',()=>{
 });
 test('installer rejects non-macOS Apple Silicon clients',async()=>{
   const {assertSupportedClient,macOSProductVersion}=await import('./build-support.mjs');
-  if(process.platform==='darwin'&&process.arch==='arm64'){
+  const {machineArch}=await import('./macos.mjs');
+  const build={platform:'darwin',arch:'arm64',osMinimum:'26.0'};
+  if(process.platform==='darwin'&&machineArch()==='arm64'){
     const version=macOSProductVersion();
     const major=Number(String(version||'').split('.')[0]);
-    if(Number.isFinite(major)&&major>=26)assert.doesNotThrow(()=>assertSupportedClient());
-    else assert.throws(()=>assertSupportedClient(),/macOS 26\+/);
+    if(Number.isFinite(major)&&major>=26)assert.doesNotThrow(()=>assertSupportedClient(build));
+    else assert.throws(()=>assertSupportedClient(build),/macOS 26\+/);
   }else{
-    assert.throws(()=>assertSupportedClient(),/macOS 26\+/);
+    assert.throws(()=>assertSupportedClient(build),/macOS 26\+/);
   }
 });

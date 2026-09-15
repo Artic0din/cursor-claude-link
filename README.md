@@ -9,25 +9,26 @@ Companion project: [cursor-gpt-link](https://github.com/Artic0din/cursor-gpt-lin
 | Item | Current status |
 | --- | --- |
 | Client platform | macOS 26+ (Apple Silicon, arm64) |
-| Latest tested Cursor | 3.20.21, September 14, 2026; automated checks |
-| Cursor commit | `f09fca384ceca23f7bf21f9c23655b162641d740` |
-| Supported Cursor 3.20.11 | Commit `69d099d6568dc97e110ba8184614faf51c4040b0` |
-| Previous supported Cursor | 3.20.7, commit `979197d5570b168c034c634b3e21f2bea3ea5be0` |
-| Node.js used locally | 26.7.0 |
-| Claude Code used locally | 2.1.263, signed in with Claude Max |
-| Model selection and file edits | Confirmed manually after updating Cursor to 3.20.11 |
-| Bridge tool calls | Sonnet and Fable round trips verified before the Cursor update |
+| Verified macOS Cursor | 3.20.17, September 15, 2026 |
+| Cursor commit | `0c32194e3fb5ffaced9fb36430b860ec301e1fc0` |
+| Node.js used locally | 25.2.1 |
+| Claude Code used locally | 2.1.270, signed in with Claude Max |
+| macOS signing | Hardened runtime, entitlements and native loading checked |
 | Context and effort | Forwarding checked in both runtime bundles; short requests tested with 200K and 1M |
 | IDE and Agents Window | Both bundles patched and syntax checked; separate manual coverage is not recorded |
 | Remote SSH | Local inference routing implemented; dedicated Claude SSH testing is still pending |
 | Subscription usage | Settings card implemented; retrieval can be unavailable |
 | Fast and Ultracode | Not implemented |
 
-Cursor 3.20.21 passed syntax, anchor, SSH routing, context and effort forwarding, and native stream-adapter checks. Standalone Claude and combined ChatGPT/Claude installations were verified on a separate local copy. A fresh manual UI test is pending for this build. Earlier live attachment and tool-call checks are documented separately. See [testing notes](docs/testing.md) for the exact coverage.
+Only Cursor 3.20.17 has verified macOS arm64 hashes in this release.
+Use a local workspace with the **This Mac** environment; cloud agents cannot reach these local bridges and are unsupported.
+The retained older and 3.20.21 metadata describes historical Windows builds and is rejected on macOS.
+See [testing notes](docs/testing.md) for current macOS results and separately labelled upstream history.
 
 Only the listed builds are supported. The installer checks version, commit, original JavaScript hashes and patch anchors. A matching local ChatGPT installation manifest can identify already patched files. Unknown changes stop installation.
 
-On Cursor 3.20.17 and 3.20.21, local subscription subagents also receive a missing parent Task entry before Cursor waits for its registration. The repair passed automated checks in both workbenches; a completed SSH subagent task still needs manual confirmation. See the testing notes for details.
+On Cursor 3.20.17, local subscription subagents also receive a missing parent Task entry before Cursor waits for its registration.
+The repair passed automated checks in both workbenches; a completed SSH subagent task still needs manual confirmation.
 
 ## What it adds
 
@@ -44,9 +45,9 @@ Effort levels come from model metadata: Low, Medium, High, Very high and Max whe
 ## Requirements
 
 - macOS 26 or newer on Apple Silicon (arm64) and a supported Cursor build.
-- Node.js 22 or newer on PATH. Local testing used 26.7.0.
+- Node.js 22 or newer on PATH, including Intel Node running through Rosetta on an Apple Silicon Mac.
 - The native Claude Code executable and a Claude subscription sign-in with access to the requested models.
-- Permission to modify the Cursor installation.
+- A Cursor app owned by your macOS user and an existing Apple signing identity in Keychain.
 
 There are no npm dependencies. API-key-only authentication is not supported. Claude Code manages sign-in and token renewal; this project does not read credential files or import browser cookies.
 
@@ -62,13 +63,23 @@ npm run doctor
 
 Skip the login command if Claude Code is already signed into the correct account. Complete browser sign-in yourself. `doctor` reports selected status and model fields, without printing credentials or account identifiers.
 
+Run `security find-identity -v -p codesigning` and set `CURSOR_MACOS_SIGN_IDENTITY` to the 40-character SHA-1 of the Apple identity to use.
+The selection is saved locally for later restoration.
 Close Cursor, then install:
 
 ```bash
 npm run install:patch
 ```
 
-Start Cursor again and select a Claude model. The bridge starts with Cursor on `127.0.0.1:43188`. To start it manually, use `npm start`. If you applied the patch while Cursor was open, run **Developer: Reload Window** and start the bridge if needed.
+Start Cursor again and select a Claude model.
+The bridge starts with Cursor on `127.0.0.1:43188`.
+Startup failures are saved in the owner-only `.state/bridge-startup.log`.
+To start it manually, use `npm start`.
+
+The installer patches the selected app directly; it does not make a full-app copy.
+It signs native binaries and the app bundle with the selected Apple identity while preserving entitlements and hardened-runtime flags.
+Signature verification and an Electron native-loading check must pass before installation succeeds.
+The app is restricted to its owner because patched bundles contain local bridge keys.
 
 The installer prefers `claude` on PATH, matching the terminal, then tries `~/.local/bin/claude`. For custom locations, set these before the first installation:
 
@@ -85,7 +96,9 @@ Configuration, installation manifests and backups live in this clone and are ign
 
 ## Using it with ChatGPT
 
-Install [cursor-gpt-link](https://github.com/vertexitde/cursor-gpt-link) first, then this patch. Both patch the same Cursor bundles. The Claude installer preserves the existing ChatGPT changes and updates its installation hashes.
+Install [cursor-gpt-link](https://github.com/Artic0din/cursor-gpt-link) first, then this patch.
+Both patch the same Cursor bundles.
+The Claude installer discovers GPT's default macOS state directory, preserves its changes and updates its installation hashes.
 
 For removal or upgrades, restore Claude first, then restore ChatGPT if needed. Removing Claude returns Cursor to the state immediately before the Claude installation, which can include ChatGPT. Do not remove the underlying ChatGPT patch first and assume the Claude manifest still matches.
 
@@ -98,7 +111,13 @@ npm run status
 npm run uninstall
 ```
 
-These correspond to `node patcher.mjs status` and `node patcher.mjs restore`. Status verifies installed-file and backup hashes. Restore refuses to overwrite changed files. Backups remain available.
+These correspond to `node patcher.mjs status` and `node patcher.mjs restore`.
+Status verifies the app signature and file hashes.
+Restore validates the six file backups, restores the resources and signs the app again before reporting success.
+An interrupted restore can be retried while the manifest remains present.
+Restore refuses to overwrite unrelated changed files.
+Reinstall official Cursor to recover its original vendor signature or if signing cannot be completed, then install GPT followed by Claude again.
+Installation archives stale state only after recognizing the freshly installed app or a valid GPT installation.
 
 For a normal project update, close Cursor, restore the patch, run `git pull`, then install again. An already running bridge can remain after restore until stopped or the Mac is restarted. Do not share its local key or configuration.
 

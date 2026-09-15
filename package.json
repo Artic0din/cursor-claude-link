@@ -6,7 +6,7 @@
   "description": "Use local Claude Code subscription models in the Cursor agent harness on macOS 26+ (Apple Silicon)",
   "scripts": {
     "doctor": "node doctor.mjs",
-    "test": "node --test test.mjs bridge.test.mjs attachments.test.mjs token-usage.test.mjs subagent-bubbles.test.mjs autostart.test.mjs",
+    "test": "node --test test.mjs bridge.test.mjs attachments.test.mjs token-usage.test.mjs subagent-bubbles.test.mjs autostart.test.mjs macos.test.mjs build-support.test.mjs",
     "test:live": "node live-test.mjs",
     "install:patch": "node patcher.mjs install",
     "uninstall": "node patcher.mjs restore",
@@ -26,9 +26,9 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/vertexitde/cursor-claude-link.git"
+    "url": "https://github.com/Artic0din/cursor-claude-link.git"
   },
   "bugs": {
-    "url": "https://github.com/vertexitde/cursor-claude-link/issues"
+    "url": "https://github.com/Artic0din/cursor-claude-link/issues"
   }
 }
