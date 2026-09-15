@@ -13,7 +13,9 @@ A matching version label alone is insufficient to establish compatibility.
 
 ## Current checks
 
-All 46 local tests passed, covering bridge error handling, external tool naming, attachments, token accounting, subagent registration, exact POSIX process matching and startup after the launching host exits.
+All 47 local tests passed, covering bridge error handling, external tool naming, attachments, token accounting, subagent registration, exact POSIX process matching and startup after the launching host exits.
+Repeating a combined installation is rejected before its active restoration manifest can be archived; the regression also permits a GPT-only installation.
+The repeated-install check also passed against the real combined app, leaving both manifests and all six app resources unchanged.
 
 Both links installed directly in `/Applications/Cursor.app`, GPT first and Claude second, with an existing Apple signing identity.
 Strict signature verification, Electron native loading and both installation manifests passed after combined installation.

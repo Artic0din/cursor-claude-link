@@ -54,6 +54,7 @@ export function requireSupportedOriginals(root) {
     const manifest=JSON.parse(fs.readFileSync(manifestPath,'utf8'));
     const matching=manifest.files.filter(f=>path.resolve(f.path).startsWith(path.resolve(root)+path.sep));
     if(!matching.length)continue;
+    if(manifest.claudeManifest)throw new Error('Claude is already installed over GPT. Restore Claude before reinstalling.');
     // A known local GPT installation may wrap the supported original bundles.
     for(const entry of matching){
       const relative=path.relative(root,entry.path).split(path.sep).join('/');
