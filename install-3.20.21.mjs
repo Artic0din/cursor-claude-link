@@ -4,7 +4,7 @@ import {patchMaxMode} from './max-mode.mjs';
 import {patchSubagentSettingsWorkbench, patchSubagentSettingsRuntime} from './subagent-settings.mjs';
 import {patchSubagentModel} from './subagent-model.mjs';
 import {patchSubagentBubbles} from './subagent-bubbles.mjs';
-import {cursorRoot,linkedGptManifests,requireSupportedOriginals} from './build-support.mjs';
+import {cursorRoot,linkedGptManifests,requireSupportedOriginals,restoreInstalledFiles} from './build-support.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
@@ -25,14 +25,7 @@ const manifestPath=path.join(dir,'installed.json');
 const hash=value=>crypto.createHash('sha256').update(value).digest('hex');
 const linkedManifests=linkedGptManifests();
 if(process.argv.includes('--restore')){
-  const manifest=JSON.parse(fs.readFileSync(manifestPath,'utf8'));
-  for(const f of manifest.files){if(hash(fs.readFileSync(f.path))!==f.patchedHash||hash(fs.readFileSync(f.backup))!==f.originalHash)throw new Error('Files changed. Restore stopped: '+f.path);}
-  for(const f of manifest.files)fs.copyFileSync(f.backup,f.path);
-  for(const linked of manifest.linked){
-    const current=JSON.parse(fs.readFileSync(linked.path,'utf8'));
-    for(const entry of current.files){const restored=manifest.files.find(f=>f.path===entry.path);if(restored)entry.patchedHash=restored.originalHash;}
-    fs.writeFileSync(linked.path,JSON.stringify(current,null,2));
-  }
+  restoreInstalledFiles(JSON.parse(fs.readFileSync(manifestPath,'utf8')));
   console.log('Claude patch removed. Reload Cursor.');process.exit();
 }
 if(fs.existsSync(manifestPath))throw new Error('Claude patch already installed. Restore before reinstalling.');

@@ -7,6 +7,22 @@ import {assertSupportedMac} from './macos.mjs';
 
 export const sha256=value=>crypto.createHash('sha256').update(value).digest('hex');
 
+// Version `--restore` helpers leave installed.json in place so install.mjs can
+// re-sign Cursor and then archive the manifest.
+export function restoreInstalledFiles(manifest) {
+  for (const file of manifest.files) {
+    const current=sha256(fs.readFileSync(file.path));
+    if ((current!==file.patchedHash&&current!==file.originalHash)||sha256(fs.readFileSync(file.backup))!==file.originalHash)
+      throw new Error('Files changed. Restore stopped: '+file.path);
+  }
+  for (const file of manifest.files)
+    if (sha256(fs.readFileSync(file.path))===file.patchedHash) fs.copyFileSync(file.backup,file.path);
+  for (const linked of manifest.linked??[]) {
+    try { if (typeof linked?.path==='string'&&typeof linked?.original==='string') fs.writeFileSync(linked.path,linked.original); }
+    catch { /* A missing GPT checkout must not abort after Cursor files are restored. */ }
+  }
+}
+
 export function macOSProductVersion() {
   if(process.platform!=='darwin')return null;
   try{

@@ -12,7 +12,8 @@ for(const version of ['3.20.7','3.20.11','3.20.17','3.20.21','3.20.23','3.21.1',
 }
 for(const file of fs.readdirSync(root).filter(name=>/^install-3\./.test(name))){
   const source=fs.readFileSync(new URL(file,root),'utf8');
-  if(source.includes("manifestPath+'.restored-'"))throw new Error(file+' must leave installed.json in place so install.mjs can re-sign after restore');
+  if(source.includes("manifestPath+'.restored-'")||source.includes('unlinkSync(manifestPath)'))throw new Error(file+' must leave installed.json in place so install.mjs can re-sign after restore');
+  if(!source.includes('restoreInstalledFiles(JSON.parse(fs.readFileSync(manifestPath'))throw new Error(file+' must use the shared retry-safe restore helper');
   if(source.includes('Existing GPT manifest')&&!source.includes('pending.some(x=>x.path===f.path)'))throw new Error(file+' must hash-check only overlapping GPT paths');
   const advertisesMax=source.includes('config.advertiseMaxMode=true');
   if(source.includes('patchMaxMode')!==advertisesMax)throw new Error(file+' must advertise MAX picker fields only when patchMaxMode is installed');

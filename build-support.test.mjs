@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {getBuild, linkedGptManifests, requireSupportedOriginals, sha256} from './build-support.mjs';
+import {getBuild, linkedGptManifests, requireSupportedOriginals, restoreInstalledFiles, sha256} from './build-support.mjs';
 
 test('default companion discovery uses the macOS application-support directory', () => {
   const previous=process.env.CURSOR_GPT_LINK_HOME;
@@ -62,6 +62,45 @@ test('version installers leave installed.json for the macOS restore wrapper', ()
   for(const name of fs.readdirSync(dir).filter(file=>/^install-3\./.test(file))){
     const source=fs.readFileSync(path.join(dir,name),'utf8');
     assert.equal(source.includes("manifestPath+'.restored-'"),false,name);
+    assert.equal(source.includes('unlinkSync(manifestPath)'),false,name);
+    assert.match(source,/restoreInstalledFiles\(JSON\.parse\(fs\.readFileSync\(manifestPath/,name);
     assert.match(source,/pending\.some\(x=>x\.path===f\.path\)/,name);
   }
+});
+
+function restoreFixture(t) {
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'claude-restore-test-'));
+  t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));
+  const files=['one.js','two.js'].map((name,i)=>{
+    const file=path.join(dir,name),backup=path.join(dir,name+'.bak');
+    fs.writeFileSync(file,'patched '+i);fs.writeFileSync(backup,'original '+i);
+    return {path:file,backup,originalHash:sha256(Buffer.from('original '+i)),patchedHash:sha256(Buffer.from('patched '+i))};
+  });
+  return {dir,files};
+}
+
+test('restore retries after an interrupted copy and skips already-restored targets', t=>{
+  const {files}=restoreFixture(t);
+  fs.writeFileSync(files[0].path,'original 0');
+  restoreInstalledFiles({files,linked:[]});
+  assert.equal(fs.readFileSync(files[0].path,'utf8'),'original 0');
+  assert.equal(fs.readFileSync(files[1].path,'utf8'),'original 1');
+});
+
+test('restore refuses unknown bytes before copying remaining files', t=>{
+  const {files}=restoreFixture(t);
+  fs.writeFileSync(files[1].path,'tampered');
+  assert.throws(()=>restoreInstalledFiles({files,linked:[]}),/Files changed/);
+  assert.equal(fs.readFileSync(files[0].path,'utf8'),'patched 0');
+});
+
+test('restore writes linked GPT originals and continues if that checkout is gone', t=>{
+  const {dir,files}=restoreFixture(t);
+  const gpt=path.join(dir,'gpt-installed.json');
+  const original=JSON.stringify({files:[{path:files[0].path,patchedHash:files[0].originalHash}]},null,2);
+  fs.writeFileSync(gpt,'not-json');
+  restoreInstalledFiles({files,linked:[{path:gpt,original}]});
+  assert.equal(fs.readFileSync(gpt,'utf8'),original);
+  assert.equal(fs.readFileSync(files[0].path,'utf8'),'original 0');
+  restoreInstalledFiles({files,linked:[{path:path.join(dir,'missing-gpt','installed.json'),original}]});
 });
