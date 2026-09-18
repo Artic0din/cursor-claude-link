@@ -7,6 +7,8 @@ The format follows Keep a Changelog.
 
 ### Fixed
 
+- Advertised Cursor MAX-switch metadata only on versions that install `patchMaxMode`; 3.20.17 still exposes the Context dropdown and 200K/1M display split.
+- Wired `verifySubagentSettings` into `check:subagents` and failed closed on unknown `lifecycleSymbols` versions.
 - Left `installed.json` in place during version `--restore` so the macOS wrapper can re-sign Cursor, and hash-checked companion GPT manifests only on overlapping paths.
 - Kept top-level `context_window` on `/v1/models` next to `capabilities.context_length` for Cursor 3.20.17 clients.
 - Enabled installation in Cursor 3.20.17 on macOS Apple Silicon with verified Mac hashes and Apple code signing that preserves hardened runtime and entitlements.

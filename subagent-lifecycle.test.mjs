@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {getEventListeners} from 'node:events';
-import {subscriptionComposer, createSubscriptionSubagent, runSubscriptionSubagent, warmSubscriptionTranscript} from './subagent-lifecycle.mjs';
+import {subscriptionComposer, createSubscriptionSubagent, runSubscriptionSubagent, warmSubscriptionTranscript, patchSubagentLifecycle} from './subagent-lifecycle.mjs';
 import {verifySubagentLifecycle} from './scripts/subagent-lifecycle-check.mjs';
 const prefixes=['chatgpt-codex/','claude-subscription/'];
 function setup(model='chatgpt-codex/test') {
@@ -93,3 +93,6 @@ for (const untrack of ['tr','cs','Xi','Kr','Qr','Jr']) {
     await verifySubagentLifecycle(lifecycleFixture(untrack), ['claude-subscription/']);
   });
 }
+test('unknown lifecycle versions fail closed',()=>{
+  assert.throws(()=>patchSubagentLifecycle('source','desktop','claude-subscription/','3.99.0'),/Unsupported subagent lifecycle version/);
+});

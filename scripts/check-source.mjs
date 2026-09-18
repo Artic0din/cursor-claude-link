@@ -14,5 +14,8 @@ for(const file of fs.readdirSync(root).filter(name=>/^install-3\./.test(name))){
   const source=fs.readFileSync(new URL(file,root),'utf8');
   if(source.includes("manifestPath+'.restored-'"))throw new Error(file+' must leave installed.json in place so install.mjs can re-sign after restore');
   if(source.includes('Existing GPT manifest')&&!source.includes('pending.some(x=>x.path===f.path)'))throw new Error(file+' must hash-check only overlapping GPT paths');
+  const advertisesMax=source.includes('config.advertiseMaxMode=true');
+  if(source.includes('patchMaxMode')!==advertisesMax)throw new Error(file+' must advertise MAX picker fields only when patchMaxMode is installed');
+  if(!source.includes('advertiseMaxMode:config.advertiseMaxMode'))throw new Error(file+' must serialize pickerModels with the installed MAX flag');
 }
 console.log('Source syntax and supported build metadata passed.');

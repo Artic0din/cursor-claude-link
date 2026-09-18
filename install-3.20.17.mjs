@@ -43,11 +43,12 @@ const config=fs.existsSync(configPath)?JSON.parse(fs.readFileSync(configPath,'ut
 if(!Number.isInteger(config.port)||config.port<1024||config.port>65535||typeof config.key!=='string'||!/^[a-f0-9]{64}$/.test(config.key))throw new Error('Invalid local bridge configuration.');
 await requireSubscription(config.claude,{cwd:dir});
 const catalog=await discoverModels(config.claude,{cwd:dir});
+config.advertiseMaxMode=false;
 fs.writeFileSync(configPath,JSON.stringify(config,null,2),{mode:0o600});
 function once(source,before,after){if(source.split(before).length!==2)throw new Error('Unsupported or repeated patch anchor: '+before.slice(0,100));return source.replace(before,after);}
 const base='http://127.0.0.1:'+config.port;
 const prelude=`
-var __claudeBridgeModels=${JSON.stringify(pickerModels(catalog))};
+var __claudeBridgeModels=${JSON.stringify(pickerModels(catalog,{advertiseMaxMode:config.advertiseMaxMode}))};
 const __claudeBridgeBase=${JSON.stringify(base)},__claudeBridgeKey=${JSON.stringify(config.key)};
 function __isClaudeBridgeModel(m){return typeof m==="string"&&m.startsWith("claude-subscription/")}
 function __withClaudeBridgeModels(models){return [...__claudeBridgeModels,...models.filter(m=>!__isClaudeBridgeModel(m.name))]}

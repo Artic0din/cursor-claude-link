@@ -189,7 +189,7 @@ test('each Claude variant describes its selected context and effort',()=>{
 });
 
 test('MAX selects the Claude 1M variant and keeps effort in both directions',()=>{
- const picker=pickerModels(contextCatalog).find(m=>m.name==='claude-subscription/opus');
+ const picker=pickerModels(contextCatalog,{advertiseMaxMode:true}).find(m=>m.name==='claude-subscription/opus');
  assert.equal(picker.supportsMaxMode,true);
  assert.equal(picker.variants.filter(v=>v.isDefaultMaxConfig).length,1);
  for(const variant of picker.variants)for(const maxMode of [false,true]){
@@ -213,11 +213,25 @@ test('MAX selects the Claude 1M variant and keeps effort in both directions',()=
 test('picker separates standard and extended limits while runtime retains provider capacity',()=>{
  const models=pickerModels(contextCatalog),provider=providerModels(contextCatalog);
  for(const model of models){
+  assert.equal(model.supportsMaxMode,false);
   assert.equal(model.contextTokenLimit,200000);
-  const maximum=model.supportsMaxMode?1000000:200000;
+  const maximum=model.parameterDefinitions.some(p=>p.id==='context')?1000000:200000;
   assert.equal(model.contextTokenLimitForMaxMode,maximum);
   const listed=provider.find(p=>p.id===model.name);
   assert.equal(listed.capabilities.context_length,maximum);
   assert.equal(listed.context_window,maximum);
  }
+});
+
+test('3.20.17 catalog keeps Context without advertising the MAX switch',()=>{
+ const opus=pickerModels(contextCatalog).find(m=>m.name==='claude-subscription/opus');
+ assert.equal(opus.supportsMaxMode,false);
+ assert.ok(opus.parameterDefinitions.some(p=>p.id==='context'));
+ assert.equal(opus.contextTokenLimit,200000);
+ assert.equal(opus.contextTokenLimitForMaxMode,1000000);
+ assert.ok(opus.variants.every(v=>v.isMaxMode===false&&v.isDefaultMaxConfig===false));
+ const advertised=pickerModels(contextCatalog,{advertiseMaxMode:true}).find(m=>m.name==='claude-subscription/opus');
+ assert.equal(advertised.supportsMaxMode,true);
+ assert.equal(advertised.variants.filter(v=>v.isDefaultMaxConfig).length,1);
+ assert.ok(advertised.variants.some(v=>v.isMaxMode));
 });
