@@ -64,6 +64,7 @@ test('version installers leave installed.json for the macOS restore wrapper', ()
     assert.equal(source.includes("manifestPath+'.restored-'"),false,name);
     assert.equal(source.includes('unlinkSync(manifestPath)'),false,name);
     assert.match(source,/restoreInstalledFiles\(JSON\.parse\(fs\.readFileSync\(manifestPath/,name);
+    assert.match(source,/appMode:requireWritableApp\(root\)/,name);
     assert.match(source,/pending\.some\(x=>x\.path===f\.path\)/,name);
   }
 });
@@ -103,4 +104,19 @@ test('restore writes linked GPT originals and continues if that checkout is gone
   assert.equal(fs.readFileSync(gpt,'utf8'),original);
   assert.equal(fs.readFileSync(files[0].path,'utf8'),'original 0');
   restoreInstalledFiles({files,linked:[{path:path.join(dir,'missing-gpt','installed.json'),original}]});
+});
+
+test('restore rethrows non-ENOENT linked GPT write errors', t=>{
+  const {dir,files}=restoreFixture(t);
+  const blocked=path.join(dir,'gpt-dir');
+  fs.mkdirSync(blocked);
+  assert.throws(()=>restoreInstalledFiles({files,linked:[{path:blocked,original:'{}'}]}),{code:'EISDIR'});
+  const denied=path.join(dir,'gpt-denied.json');
+  fs.writeFileSync(denied,'x');
+  fs.chmodSync(denied,0o444);
+  try {
+    assert.throws(()=>restoreInstalledFiles({files,linked:[{path:denied,original:'{}'}]}),error=>error.code==='EACCES'||error.code==='EPERM');
+  } finally {
+    fs.chmodSync(denied,0o600);
+  }
 });

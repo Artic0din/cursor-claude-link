@@ -18,8 +18,11 @@ export function restoreInstalledFiles(manifest) {
   for (const file of manifest.files)
     if (sha256(fs.readFileSync(file.path))===file.patchedHash) fs.copyFileSync(file.backup,file.path);
   for (const linked of manifest.linked??[]) {
-    try { if (typeof linked?.path==='string'&&typeof linked?.original==='string') fs.writeFileSync(linked.path,linked.original); }
-    catch { /* A missing GPT checkout must not abort after Cursor files are restored. */ }
+    try {
+      if (typeof linked?.path==='string'&&typeof linked?.original==='string') fs.writeFileSync(linked.path,linked.original);
+    } catch (error) {
+      if (error?.code!=='ENOENT') throw error;
+    }
   }
 }
 

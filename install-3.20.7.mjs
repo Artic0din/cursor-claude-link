@@ -12,6 +12,7 @@ import {findClaude} from './cli-path.mjs';
 import {usageSectionSrc} from './usage-section.mjs';
 import {pickerSectionHelpersSrc, patchPickerSections} from './picker-sections.mjs';
 import {buildAutostart} from './autostart.mjs';
+import {requireWritableApp} from './macos.mjs';
 
 const dir=path.dirname(fileURLToPath(import.meta.url));
 const root=cursorRoot();
@@ -114,7 +115,7 @@ const backupDir=path.join(dir,'backups',String(Date.now()));fs.mkdirSync(backupD
 for(const [i,file] of pending.entries()){
   if(file.path.endsWith('.js')){const candidate=path.join(backupDir,i+'.mjs');fs.writeFileSync(candidate,file.content);execFileSync(process.execPath,['--check',candidate],{stdio:'pipe'});fs.unlinkSync(candidate);}
 }
-const manifest={version,files:[],linked:[]};
+const manifest={version,files:[],linked:[],appMode:requireWritableApp(root)};
 for(const manifestFile of linkedManifests.filter(f=>fs.existsSync(f))){
   const text=fs.readFileSync(manifestFile,'utf8'),linked=JSON.parse(text);
   if(!linked.files.some(f=>pending.some(x=>x.path===f.path)))continue;
