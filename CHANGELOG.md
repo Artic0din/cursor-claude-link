@@ -18,3 +18,4 @@ The format follows Keep a Changelog.
 
 - Restricted installation to the verified macOS build; retained Windows metadata is explicitly unsupported on Mac.
 - Patched the selected app directly, without requiring a full-app backup.
+- Synced upstream patch definitions for Cursor 3.20.21, 3.20.23, 3.21.1, 3.21.9 and 3.21.12 (Explore settings, context/MAX, subagent lifecycle, queued follow-ups). Those versions stay rejected on macOS until `scripts/capture-hashes.mjs` records darwin/arm64 hashes.

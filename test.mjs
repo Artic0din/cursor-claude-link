@@ -157,6 +157,9 @@ test('autostart restarts only the Claude bridge worker',()=>{
   assert.equal(src.includes('windowsHide'),false);
   assert.equal(src.includes('win32'),false);
   assert.equal(src.includes('cursor-gpt-link'),false);
+  const withState=buildBridgeLauncher({nodePath,bridgePath,stateDir:'/tmp/claude-state'});
+  assert.match(withState,/CURSOR_CLAUDE_LINK_HOME/);
+  assert.equal(withState.includes('CURSOR_GPT_LINK_HOME'),false);
 });
 test('installer rejects non-macOS Apple Silicon clients',async()=>{
   const {assertSupportedClient,macOSProductVersion}=await import('./build-support.mjs');

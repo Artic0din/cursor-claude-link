@@ -21,8 +21,9 @@ Companion project: [cursor-gpt-link](https://github.com/Artic0din/cursor-gpt-lin
 | Fast and Ultracode | Not implemented |
 
 Only Cursor 3.20.17 has verified macOS arm64 hashes in this release.
+Patch definitions for 3.20.21, 3.20.23, 3.21.1, 3.21.9 and 3.21.12 are included so a matching original Mac app can be captured with `scripts/capture-hashes.mjs`. Until those hashes are recorded, those versions are rejected.
 Use a local workspace with the **This Mac** environment; cloud agents cannot reach these local bridges and are unsupported.
-The retained older and 3.20.21 metadata describes historical Windows builds and is rejected on macOS.
+The retained older and later Windows metadata describes historical upstream builds and is rejected on macOS.
 See [testing notes](docs/testing.md) for current macOS results and separately labelled upstream history.
 
 Only the listed builds are supported. The installer checks version, commit, original JavaScript hashes and patch anchors. A matching local ChatGPT installation manifest can identify already patched files. Unknown changes stop installation.
@@ -30,11 +31,7 @@ Only the listed builds are supported. The installer checks version, commit, orig
 On Cursor 3.20.17, local subscription subagents also receive a missing parent Task entry before Cursor waits for its registration.
 The repair passed automated checks in both workbenches; a completed SSH subagent task still needs manual confirmation.
 
-On Cursor 3.20.21, **Explore Subagent Model** selections are forwarded to the local runtime with their model parameters. **Default**, **Inherit** and **Disabled** retain Cursor's native behavior. Model tooltips show the context window and selected effort in the same layout as Cursor's built-in models. Context selection and the legacy MAX switch now control the actual runtime window while preserving effort. See [Context and MAX mode](docs/model-modes.md). See the [testing notes](docs/testing.md) for coverage.
-
-On Cursor 3.20.21, stopping a subscription chat also cancels its active subagents. Local subagent stops do not wait for the agent-host service, and a cancelled parent cannot start a late child request. Reopening a subagent refreshes its transcript cache and loads the most recent missing messages. These changes passed automated checks; manual chat-switch and stop verification is still pending.
-
-On Cursor 3.20.21, queued follow-ups are forwarded to the local runtime. Starting Build also preserves human messages that have not reached the conversation checkpoint yet. Delivery is confirmed by native message events, and stopping the chat prevents queued work from starting another run. Automated queue and build checks passed; manual Plan-to-Build validation is pending.
+Later patch definitions also forward **Explore Subagent Model** selections, match native model tooltips, connect context and MAX selection to the runtime budget, cancel active subagents with the parent chat, refresh subagent transcripts, and forward queued follow-ups when starting Build. See [Context and MAX mode](docs/model-modes.md). Those features are present in the 3.20.21 and later patch files; they are not installable on macOS until that build's Mac hashes are captured.
 
 
 ## What it adds
@@ -195,6 +192,8 @@ npm run check:source
 ```
 
 Unit tests use synthetic data and do not make model requests. The optional `npm run test:live` requires the running bridge and consumes subscription usage. It checks a tool call and its result. Set `CLAUDE_TEST_MODEL` to a catalog value to select a different model.
+
+For a new supported Mac build, run `node scripts/capture-hashes.mjs` with its original `Contents/Resources/app` path, review and copy the complete output into the matching `build-*.json`, then re-run source checks. Capture rejects incomplete apps, invalid signatures and executables without arm64 support.
 
 No Cursor binaries, full bundled source, model caches or account files are distributed. When reporting a problem, include the Cursor version and commit, operating system, Node.js and Claude Code versions, and a redacted error. See [SECURITY.md](SECURITY.md) for sensitive reports.
 

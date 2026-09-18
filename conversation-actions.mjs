@@ -1,3 +1,5 @@
+import crypto from 'node:crypto';
+
 export function subscriptionActionModel(model, prefixes) {
   return typeof model === 'string' && prefixes.some(prefix => model.startsWith(prefix));
 }

@@ -8,7 +8,7 @@ The minimum supported OS is macOS 26; live application checks were performed on 
 Claude Code 2.1.270 was signed into a Claude subscription.
 
 [The 3.20.17 metadata](../build-3.20.17.json) records six hashes captured from the original, signature-verified Mac application.
-Older metadata and the 3.20.21 metadata describe Windows bundles and are rejected on macOS.
+Older metadata and the 3.20.21–3.21.12 metadata describe Windows bundles and are rejected on macOS until `scripts/capture-hashes.mjs` records a matching Mac app.
 A matching version label alone is insufficient to establish compatibility.
 
 ## Current checks
@@ -45,6 +45,8 @@ npm run check:source
 npm run status
 npm run check:runtime -- "/Applications/Cursor.app/Contents/Resources/app"
 npm run check:subagents -- "/Applications/Cursor.app/Contents/Resources/app"
+npm run check:actions -- "/Applications/Cursor.app/Contents/Resources/app"
+npm run check:ui -- "/Applications/Cursor.app/Contents/Resources/app"
 ```
 
 Unit and source checks do not require account sign-in or model requests.
@@ -64,7 +66,7 @@ These optional commands consume subscription usage and do not prove complete Cur
 5. Install GPT followed by Claude on the recognized build; stale manifests are archived only after original files or a valid companion installation are verified.
 
 Never restore old resources over a newer build or edit hashes to bypass compatibility checks.
-A new Mac build needs original-file capture, anchor review and separate validation.
+A new Mac build needs original-file capture with `scripts/capture-hashes.mjs`, anchor review and separate validation.
 The six resource backups do not contain the original vendor code signature.
 
 ## Historical upstream results and remaining coverage

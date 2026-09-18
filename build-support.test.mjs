@@ -21,10 +21,17 @@ test('default companion discovery uses the macOS application-support directory',
 test('historical Windows manifests cannot be mistaken for verified Mac builds', t => {
   const root=fs.mkdtempSync(path.join(os.tmpdir(),'claude-build-test-'));
   t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
-  for(const version of ['3.20.7','3.20.11','3.20.21']){
+  for(const version of ['3.20.7','3.20.11','3.20.21','3.20.23','3.21.1','3.21.9','3.21.12']){
     fs.writeFileSync(path.join(root,'package.json'),JSON.stringify({version}));
     assert.throws(()=>getBuild(root),/no verified macOS arm64 metadata/);
   }
+});
+
+test('unknown Cursor versions remain unsupported', t => {
+  const root=fs.mkdtempSync(path.join(os.tmpdir(),'claude-unknown-build-'));
+  t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
+  fs.writeFileSync(path.join(root,'package.json'),JSON.stringify({version:'9.9.9'}));
+  assert.throws(()=>getBuild(root),/Unsupported Cursor version/);
 });
 
 test('combined installation cannot pass the preflight that archives stale Claude state', {skip:process.platform!=='darwin'||process.arch!=='arm64'}, t=>{
