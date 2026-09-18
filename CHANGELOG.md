@@ -7,6 +7,7 @@ The format follows Keep a Changelog.
 
 ### Fixed
 
+- Privatized Cursor.app to `0700` on every version installer before writing the bridge key into workbench assets, matching 3.20.17. Rollback restores recorded `appMode`.
 - Made version `--restore` retryable after a partial copy by accepting already-restored `originalHash` targets, and restored linked GPT manifests from saved `linked.original` without aborting if that checkout is gone. `install.mjs` still archives `installed.json` after re-sign. Linked GPT writes ignore only `ENOENT`; other filesystem errors still abort. Every version installer records `appMode` from `requireWritableApp`.
 - Advertised Cursor MAX-switch metadata only on versions that install `patchMaxMode`; 3.20.17 still exposes the Context dropdown and 200K/1M display split.
 - Wired `verifySubagentSettings` into `check:subagents` and failed closed on unknown `lifecycleSymbols` versions.

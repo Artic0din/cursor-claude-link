@@ -65,6 +65,7 @@ test('version installers leave installed.json for the macOS restore wrapper', ()
     assert.equal(source.includes('unlinkSync(manifestPath)'),false,name);
     assert.match(source,/restoreInstalledFiles\(JSON\.parse\(fs\.readFileSync\(manifestPath/,name);
     assert.match(source,/appMode:requireWritableApp\(root\)/,name);
+    assert.match(source,/setAppMode\(root,0o700\)/,name);
     assert.match(source,/pending\.some\(x=>x\.path===f\.path\)/,name);
   }
 });

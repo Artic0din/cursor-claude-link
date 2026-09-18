@@ -18,7 +18,7 @@ import {findClaude} from './cli-path.mjs';
 import {usageSectionSrc} from './usage-section.mjs';
 import {pickerSectionHelpersSrc, patchPickerSections} from './picker-sections.mjs';
 import {buildAutostart} from './autostart.mjs';
-import {requireWritableApp} from './macos.mjs';
+import {requireWritableApp,setAppMode} from './macos.mjs';
 
 const dir=path.dirname(fileURLToPath(import.meta.url));
 const root=cursorRoot();
@@ -144,7 +144,8 @@ for(const [i,file] of pending.entries()){
 }
 fs.writeFileSync(manifestPath,JSON.stringify(manifest,null,2));
 try{
+  setAppMode(root,0o700);
   for(const file of pending)fs.writeFileSync(file.path,file.content);
   for(const linked of manifest.linked){const value=JSON.parse(linked.original);for(const f of value.files){const changed=manifest.files.find(x=>x.path===f.path);if(changed)f.patchedHash=changed.patchedHash;}fs.writeFileSync(linked.path,JSON.stringify(value,null,2));}
-}catch(error){for(const f of manifest.files)fs.copyFileSync(f.backup,f.path);for(const f of manifest.linked)fs.writeFileSync(f.path,f.original);fs.renameSync(manifestPath,manifestPath+'.rolled-back');throw error;}
+}catch(error){for(const f of manifest.files)fs.copyFileSync(f.backup,f.path);for(const f of manifest.linked)fs.writeFileSync(f.path,f.original);setAppMode(root,manifest.appMode);fs.renameSync(manifestPath,manifestPath+'.rolled-back');throw error;}
 console.log('Claude subscription models installed. Reload Cursor to activate.');

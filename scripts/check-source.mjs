@@ -15,6 +15,7 @@ for(const file of fs.readdirSync(root).filter(name=>/^install-3\./.test(name))){
   if(source.includes("manifestPath+'.restored-'")||source.includes('unlinkSync(manifestPath)'))throw new Error(file+' must leave installed.json in place so install.mjs can re-sign after restore');
   if(!source.includes('restoreInstalledFiles(JSON.parse(fs.readFileSync(manifestPath'))throw new Error(file+' must use the shared retry-safe restore helper');
   if(!source.includes('appMode:requireWritableApp(root)'))throw new Error(file+' must record original Cursor.app permissions');
+  if(!source.includes('setAppMode(root,0o700)'))throw new Error(file+' must privatize Cursor.app before writing the bridge key into workbench assets');
   if(source.includes('Existing GPT manifest')&&!source.includes('pending.some(x=>x.path===f.path)'))throw new Error(file+' must hash-check only overlapping GPT paths');
   const advertisesMax=source.includes('config.advertiseMaxMode=true');
   if(source.includes('patchMaxMode')!==advertisesMax)throw new Error(file+' must advertise MAX picker fields only when patchMaxMode is installed');
