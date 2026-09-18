@@ -33,7 +33,6 @@ if(process.argv.includes('--restore')){
     for(const entry of current.files){const restored=manifest.files.find(f=>f.path===entry.path);if(restored)entry.patchedHash=restored.originalHash;}
     fs.writeFileSync(linked.path,JSON.stringify(current,null,2));
   }
-  fs.renameSync(manifestPath,manifestPath+'.restored-'+Date.now());
   console.log('Claude patch removed. Reload Cursor.');process.exit();
 }
 if(fs.existsSync(manifestPath))throw new Error('Claude patch already installed. Restore before reinstalling.');
@@ -140,7 +139,8 @@ if(process.argv.includes('--check')){console.log('Cursor 3.21.12 Claude patch ca
 const manifest={version,files:[],linked:[]};
 for(const manifestFile of linkedManifests.filter(f=>fs.existsSync(f))){
   const text=fs.readFileSync(manifestFile,'utf8'),linked=JSON.parse(text);
-  for(const f of linked.files)if(hash(fs.readFileSync(f.path))!==f.patchedHash)throw new Error('Existing GPT manifest does not match current files.');
+  if(!linked.files.some(f=>pending.some(x=>x.path===f.path)))continue;
+  for(const f of linked.files)if(pending.some(x=>x.path===f.path)&&hash(fs.readFileSync(f.path))!==f.patchedHash)throw new Error('Existing GPT manifest does not match current files.');
   manifest.linked.push({path:manifestFile,original:text});
 }
 for(const [i,file] of pending.entries()){

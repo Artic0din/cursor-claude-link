@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import {fileURLToPath} from 'node:url';
 import {getBuild, linkedGptManifests, requireSupportedOriginals, sha256} from './build-support.mjs';
 
 test('default companion discovery uses the macOS application-support directory', () => {
@@ -54,4 +55,13 @@ test('combined installation cannot pass the preflight that archives stale Claude
   assert.throws(()=>requireSupportedOriginals(root),/Restore Claude before reinstalling/);
   fs.writeFileSync(manifestPath,JSON.stringify({files}));
   assert.equal(requireSupportedOriginals(root).version,build.version);
+});
+
+test('version installers leave installed.json for the macOS restore wrapper', () => {
+  const dir=path.dirname(fileURLToPath(import.meta.url));
+  for(const name of fs.readdirSync(dir).filter(file=>/^install-3\./.test(file))){
+    const source=fs.readFileSync(path.join(dir,name),'utf8');
+    assert.equal(source.includes("manifestPath+'.restored-'"),false,name);
+    assert.match(source,/pending\.some\(x=>x\.path===f\.path\)/,name);
+  }
 });

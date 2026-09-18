@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {getEventListeners} from 'node:events';
 import {subscriptionComposer, createSubscriptionSubagent, runSubscriptionSubagent, warmSubscriptionTranscript} from './subagent-lifecycle.mjs';
+import {verifySubagentLifecycle} from './scripts/subagent-lifecycle-check.mjs';
 const prefixes=['chatgpt-codex/','claude-subscription/'];
 function setup(model='chatgpt-codex/test') {
   const parentAbort=new AbortController();
@@ -77,3 +78,18 @@ test('repeated completed children do not accumulate parent abort listeners',asyn
   for(let i=0;i<100;i++)await runSubscriptionSubagent(f.service,f.request,f.child,{},prefixes);
   assert.equal(getEventListeners(f.parentAbort.signal,'abort').length,before);
 });
+function lifecycleFixture(untrack) {
+  return [
+    'cancelChat(e){const t=this.composerDataService;if(subscriptionComposer(this.composerDataService,e,__subscriptionSubagentPrefixes))this.instantiationService.invokeFunction(s=>s.get(hZe)).cancelSubagentTree(e);}',
+    'async cancelCurrentStep(){}',
+    'async stopSubagentTree(e){if(subscriptionComposer(this._composerDataService,e,__subscriptionSubagentPrefixes)){this.cancelSubagentTree(e);return;}}',
+    'async _loadSubagentTreeForStop(){}',
+    'classifyBubble(id){const map='+untrack+'(()=>this.composerHandle.data.conversationMap);return map&&map[id]?{bubble:map[id]}:{status:"unloaded"};}',
+    'getBubbleLoadState(){}'
+  ].join('\n');
+}
+for (const untrack of ['tr','cs','Xi','Kr','Qr','Jr']) {
+  test('native lifecycle check binds rotated classifyBubble untrack '+untrack, async () => {
+    await verifySubagentLifecycle(lifecycleFixture(untrack), ['claude-subscription/']);
+  });
+}

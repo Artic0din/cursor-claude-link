@@ -48,6 +48,7 @@ test('model picker keeps Claude aliases separate with image capability and no Fa
   }
   const listed=providerModels(catalog);
   assert.equal(listed[0].id,'claude-subscription/sonnet');
+  assert.equal(listed[0].context_window,listed[0].capabilities.context_length);
   assert.deepEqual(listed[0].api_types,['openai_responses']);
 });
 
@@ -202,8 +203,11 @@ test('MAX selects the Claude 1M variant and keeps effort in both directions',()=
   assert.equal(request.model,maxMode?'opus[1m]':'opus');
  }
  const meta=providerModels(contextCatalog);
- assert.equal(meta.find(m=>m.id===picker.name).capabilities.context_length,1000000);
- assert.equal(meta.find(m=>m.id.endsWith('/haiku')).capabilities.context_length,200000);
+ const opus=meta.find(m=>m.id===picker.name),haiku=meta.find(m=>m.id.endsWith('/haiku'));
+ assert.equal(opus.capabilities.context_length,1000000);
+ assert.equal(opus.context_window,1000000);
+ assert.equal(haiku.capabilities.context_length,200000);
+ assert.equal(haiku.context_window,200000);
 });
 
 test('picker separates standard and extended limits while runtime retains provider capacity',()=>{
@@ -212,6 +216,8 @@ test('picker separates standard and extended limits while runtime retains provid
   assert.equal(model.contextTokenLimit,200000);
   const maximum=model.supportsMaxMode?1000000:200000;
   assert.equal(model.contextTokenLimitForMaxMode,maximum);
-  assert.equal(provider.find(p=>p.id===model.name).capabilities.context_length,maximum);
+  const listed=provider.find(p=>p.id===model.name);
+  assert.equal(listed.capabilities.context_length,maximum);
+  assert.equal(listed.context_window,maximum);
  }
 });

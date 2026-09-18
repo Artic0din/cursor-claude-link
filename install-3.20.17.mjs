@@ -130,8 +130,8 @@ if(process.argv.includes('--check')){console.log('Cursor 3.20.17 Claude patch ca
 const manifest={version,files:[],linked:[],appMode:requireWritableApp(root)};
 for(const manifestFile of linkedManifests.filter(f=>fs.existsSync(f))){
   const text=fs.readFileSync(manifestFile,'utf8'),linked=JSON.parse(text);
-  if(!linked.files.some(file=>file.path.startsWith(root+path.sep)))continue;
-  for(const f of linked.files)if(hash(fs.readFileSync(f.path))!==f.patchedHash)throw new Error('Existing GPT manifest does not match current files.');
+  if(!linked.files.some(f=>pending.some(x=>x.path===f.path)))continue;
+  for(const f of linked.files)if(pending.some(x=>x.path===f.path)&&hash(fs.readFileSync(f.path))!==f.patchedHash)throw new Error('Existing GPT manifest does not match current files.');
   manifest.linked.push({path:manifestFile,original:text});
 }
 for(const [i,file] of pending.entries()){

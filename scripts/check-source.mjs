@@ -10,4 +10,9 @@ for(const version of ['3.20.7','3.20.11','3.20.17','3.20.21','3.20.23','3.21.1',
   const build=JSON.parse(fs.readFileSync(new URL('build-'+version+'.json',root),'utf8'));
   if(build.version!==version||!Object.values(build.files).every(hash=>/^[a-f0-9]{64}$/.test(hash)))throw new Error('Invalid build metadata');
 }
+for(const file of fs.readdirSync(root).filter(name=>/^install-3\./.test(name))){
+  const source=fs.readFileSync(new URL(file,root),'utf8');
+  if(source.includes("manifestPath+'.restored-'"))throw new Error(file+' must leave installed.json in place so install.mjs can re-sign after restore');
+  if(source.includes('Existing GPT manifest')&&!source.includes('pending.some(x=>x.path===f.path)'))throw new Error(file+' must hash-check only overlapping GPT paths');
+}
 console.log('Source syntax and supported build metadata passed.');

@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {selectedModelIds,configureTaskProps,selectedParameters,patchSubagentSettingsWorkbench,patchSubagentSettingsRuntime} from './subagent-settings.mjs';
+import {verifySubagentSettings} from './scripts/subagent-settings-check.mjs';
 import {modelTooltip} from './model-tooltip.mjs';
 const parent='claude-subscription/parent',child='claude-subscription/child';
 const params=[{id:'reasoning',value:'xhigh'},{id:'context',value:'1000000'},{id:'fast',value:'true'}];
@@ -38,4 +39,13 @@ test('model tooltip matches Cursor title, context and italic effort layout',()=>
  assert.match(modelTooltip('Model','Description',1000000,'xhigh',true).markdownContent,/1M context window\n\n\*Version: very high effort, fast\*$/);
  assert.equal(modelTooltip('Model','Description',200000).markdownContent.includes('Version:'),false);
  assert.ok(modelTooltip('<Model>','[link](url)',200000,'low').markdownContent.includes('\\<Model\\>'));
+});
+test('Explore settings check treats availableModels entries as id',()=>{
+ const source=[
+  'function abc(e){const t=()=>!1,n=lp(e),r=null!=n?n:e.localProvider;const g=res("grok-4.5",e.availableModels??[]);const override=(e.subagentModelOverrides??[]).find(o=>o.subagentType==="explore");const selected=override?.selection?.case==="model"?override.selection.value?.modelId:undefined;const s=res(selected,e.availableModels??[]);const type=override?.selection?.case==="model"?(s?"model":"inherit"):(override?.selection?.case||"inherit");const x="explore"===norm(t.subagentType);return {localProvider:r,parentRequestedModelName:e.modelId,subagentModels:mod(e,t),subagentModelForcePolicy:pol,subagentModelOverrides:{explore:{type,modelId:s}}};}',
+  'function zzz(e){return e instanceof Error}',
+  'modelId:f.modelDetails.modelId,modelParameters:f.parameters,modelInfo:T',
+  'resolvedModelParameters:__ClaudeSelectedParameters(a,x,y,z),subagentIdToResume:'
+ ].join('\n');
+ verifySubagentSettings(source);
 });

@@ -7,6 +7,8 @@ The format follows Keep a Changelog.
 
 ### Fixed
 
+- Left `installed.json` in place during version `--restore` so the macOS wrapper can re-sign Cursor, and hash-checked companion GPT manifests only on overlapping paths.
+- Kept top-level `context_window` on `/v1/models` next to `capabilities.context_length` for Cursor 3.20.17 clients.
 - Enabled installation in Cursor 3.20.17 on macOS Apple Silicon with verified Mac hashes and Apple code signing that preserves hardened runtime and entitlements.
 - Kept restoration retryable through signing failures and preserved a companion ChatGPT installation when removing Claude.
 - Preserved the active restoration manifest when a combined installation is installed again.
