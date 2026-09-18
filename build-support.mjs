@@ -36,7 +36,7 @@ export function linkedGptManifests() {
 }
 export function getBuild(root) {
   const version=JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8')).version;
-  if(!['3.20.7','3.20.11','3.20.17','3.20.21','3.20.23','3.21.1','3.21.9'].includes(version))throw new Error('Unsupported Cursor version: '+version);
+  if(!['3.20.7','3.20.11','3.20.17','3.20.21','3.20.23','3.21.1','3.21.9','3.21.12'].includes(version))throw new Error('Unsupported Cursor version: '+version);
   const build=JSON.parse(fs.readFileSync(new URL('./build-'+version+'.json',import.meta.url),'utf8'));
   if(build.platform!=='darwin'||build.arch!=='arm64')throw new Error('Cursor '+version+' has no verified macOS arm64 metadata. Use Cursor 3.20.17.');
   assertSupportedClient(build);
