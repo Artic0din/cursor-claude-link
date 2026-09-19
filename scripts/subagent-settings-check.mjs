@@ -22,14 +22,14 @@ export function verifySubagentSettings(source) {
  const overrides=[{subagentType:'explore',selection:{case:'model',value:{modelId:child,parameters:selectedParams}}}];
  const base={modelId:parent,localProvider:{kind:'http',endpoints:[]},modelParameters:parentParams,subagentModelOverrides:overrides};
  assert.equal(native(base).subagentModelOverrides.explore.type,'inherit','Original missing-catalog failure reproduced');
- const input={...base,availableModels:selectedModelIds([],overrides,parent,CLAUDE_PREFIX).map(id=>({id}))};
+ const input={...base,availableModels:selectedModelIds([],overrides,parent,CLAUDE_PREFIX).map(modelId=>({modelId}))};
  const props=configureTaskProps(input,native(input),CLAUDE_PREFIX);
  assert.deepEqual(props.subagentModelOverrides.explore,{type:'model',modelId:child});
  assert.deepEqual(props.parentModelParameters,parentParams);
  assert.deepEqual(selectedParameters(props,{subagent_type:{type:{case:'explore'}},userRequestedModelId:child},child,undefined,CLAUDE_PREFIX),selectedParams);
  const foreign=[{subagentType:'explore',selection:{case:'model',value:{modelId:'another-provider/model',parameters:selectedParams}}}];
  assert.deepEqual(selectedModelIds([],foreign,parent,CLAUDE_PREFIX),[]);
- const foreignInput={...base,subagentModelOverrides:foreign,availableModels:selectedModelIds([],foreign,parent,CLAUDE_PREFIX).map(id=>({id}))};
+ const foreignInput={...base,subagentModelOverrides:foreign,availableModels:selectedModelIds([],foreign,parent,CLAUDE_PREFIX).map(modelId=>({modelId}))};
  assert.equal(native(foreignInput).subagentModelOverrides.explore.type,'inherit');
  for(const mode of ['default','inherit','disabled']){
   const input={modelId:parent,localProvider:{kind:'http'},subagentModelOverrides:mode==='default'?[]:[{subagentType:'explore',selection:{case:mode,value:true}}]};
@@ -38,6 +38,6 @@ export function verifySubagentSettings(source) {
   assert.equal(patched.subagentModelOverrides.explore.type,mode==='default'?'inherit':mode);
  }
  assert.match(source,/modelId:([\w$]+)\.modelDetails\.modelId,modelParameters:\1\.parameters,modelInfo:[\w$]+/);
- assert.ok(source.includes('resolvedModelParameters:__subscriptionSelectedParameters(a,'),'Parameters forwarded into client subagent resolution');
+ assert.ok(source.includes('resolvedModelParameters:__ClaudeSelectedParameters(a,'),'Parameters forwarded into client subagent resolution');
  console.log('Native Explore settings: missing catalog reproduced; model, Default, Inherit, Disabled and parameters passed.');
 }

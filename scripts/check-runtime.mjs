@@ -5,13 +5,15 @@ import http from 'node:http';
 import {once} from 'node:events';
 import {createHandler} from '../bridge.mjs';
 import {sanitizeModels} from '../catalog.mjs';
+import {verifyAgentExecRegistration} from './agent-exec-registration-check.mjs';
 
 // Execute the installed adapter and stream guard, without loading the extension
 // or copying Cursor's code into the repository. HTTP parsing is mocked here.
 async function consume(source,events){
   const pivot=source.indexOf('return"response.created"===e.type');
   const start=source.lastIndexOf('async doStream(',pivot);
-  const end=source.indexOf('warnings:n}}}',pivot)+'warnings:n}}'.length;
+  const tail=source.slice(pivot).match(/warnings:[\w$]+\}\}\}/);
+  const end=tail?pivot+tail.index+tail[0].length-1:-1;
   assert.ok(start>=0&&end>start,'Supported Responses adapter found');
   const method=source.slice(start,end);
   const helper=method.match(/i=([$\w]+)\(\{finishReason:/)[1];
@@ -21,7 +23,7 @@ async function consume(source,events){
   const guardStart=source.lastIndexOf('class ',guardPivot);
   const guardEnd=source.indexOf('}})}',guardStart)+4;
   assert.ok(helperStart>=0&&helperEnd>helperStart&&guardStart>=0&&guardEnd>guardStart,'Supported stream guard found');
-  const names=[method.match(/value:o\}=await ([$\w]+)\(/)[1],method.match(/headers:([$\w]+)\(/)[1],method.match(/failedResponseHandler:([$\w]+)/)[1],...method.match(/successfulResponseHandler:([$\w]+)\(([$\w]+)\)/).slice(1)];
+  const names=[method.match(/value:[\w$]+\}=await ([$\w]+)\(/)[1],method.match(/headers:([$\w]+)\(/)[1],method.match(/failedResponseHandler:([$\w]+)/)[1],...method.match(/successfulResponseHandler:([$\w]+)\(([$\w]+)\)/).slice(1)];
   const provider=new Function(...names,source.slice(helperStart,helperEnd)+'return ({'+method+'});')(
     async()=>({value:ReadableStream.from(events.map(value=>({success:true,value})))}),()=>({}),{},()=>{},{});
   provider.getArgs=()=>({args:{},warnings:[]});provider.config={url:()=>'',headers:()=>({})};
@@ -49,6 +51,7 @@ server.listen(0,'127.0.0.1');await once(server,'listening');
 try{
   for(const name of ['cursor-agent-exec','cursor-local-agent-runtime']){
     const source=fs.readFileSync(path.join(root,'extensions',name,'dist/main.js'),'utf8');
+    if(name==='cursor-agent-exec')await verifyAgentExecRegistration(source);
     await assert.rejects(consume(source,[created,{type:'response.failed',response:{status:'failed',error:{message:errors[0]}}}]),{name:'LocalIncompleteStreamError'});
     for(const message of [...errors,undefined]){
       failure=message;

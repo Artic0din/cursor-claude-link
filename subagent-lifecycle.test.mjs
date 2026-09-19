@@ -89,7 +89,7 @@ function lifecycleFixture(untrack) {
   ].join('\n');
 }
 for (const untrack of ['Xi','Jr']) {
-  test('native lifecycle check binds 3.21.12 classifyBubble untrack '+untrack, async () => {
+  test('native lifecycle check binds 3.21.13 classifyBubble untrack '+untrack, async () => {
     await verifySubagentLifecycle(lifecycleFixture(untrack), ['claude-subscription/']);
   });
 }

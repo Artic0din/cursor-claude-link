@@ -13,6 +13,6 @@ export function patchMaxMode(source, prefix) {
   const matches=[...source.matchAll(/function ([\w$]+)\(([\w$]+),([\w$]+),([\w$]+)\)\{if\(\2.variants.length===0\|\|!\4&&\2.supportsNonMaxMode===!1\)return;/g)];
   if(matches.length!==1)throw new Error('Max-mode variant solver anchor is not unique');
   const match=matches[0],model=match[2],params=match[3],mode=match[4];
-  const call='if('+model+'.name?.startsWith('+JSON.stringify(prefix)+')){const v=__subscriptionMaxModeVariant('+model+','+params+','+mode+');if(v)return{model:'+model+',variant:v,parameters:v.parameterValues}}';
-  return source.replace(match[0],match[0]+call)+'\n'+maxModeVariant.toString().replace('function maxModeVariant','function __subscriptionMaxModeVariant')+'\n';
+  const call='if('+model+'.name?.startsWith('+JSON.stringify(prefix)+')){const v=__ClaudeMaxModeVariant('+model+','+params+','+mode+');if(v)return{model:'+model+',variant:v,parameters:v.parameterValues}}';
+  return source.replace(match[0],match[0]+call)+'\n'+maxModeVariant.toString().replace('function maxModeVariant','function __ClaudeMaxModeVariant')+'\n';
 }
