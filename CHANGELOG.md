@@ -7,6 +7,7 @@ The format follows Keep a Changelog.
 
 ### Fixed
 
+- Combined GPT-first install now records `claudeManifest` on the linked GPT manifest, uses a Claude-specific task-props native wrapper so GPT's wrapper stays callable, and skips the 0444 permission assertion when tests run as root.
 - `selectedModelIds` now keeps only Explore IDs that start with this provider prefix, so a foreign selection is not added to the Claude catalog.
 - Serialized Explore and Task-bubble helpers no longer close over Node imports (`requireSubscriptionPrefix`, `CLAUDE_PREFIX`). Patchers still validate the prefix; bubbles emit `CLAUDE_PREFIX` into the workbench bundle.
 - `--restore` reads the existing `installed.json` first and no longer requires `getBuild()` to succeed, so a leftover 3.20.17 patch can be uninstalled after this checkout became 3.21.12-only. 3.20.17 is not an install target; new installs still fail closed until darwin/arm64 hashes exist.

@@ -35,6 +35,16 @@ test('unknown patch anchors fail before returning a modified bundle',()=>{
  assert.throws(()=>patchSubagentSettingsWorkbench('unrecognized',CLAUDE_PREFIX),/anchor/);
  assert.throws(()=>patchSubagentSettingsRuntime('unrecognized',CLAUDE_PREFIX),/anchor/);
 });
+test('Claude task-props wrapper keeps a GPT-first native wrapper callable',()=>{
+ const native='function abc(e){const t=()=>!1,n=lp(e),r=null!=n?n:e.localProvider;';
+ const tail='\nmodelId:f.modelDetails.modelId,modelParameters:f.parameters,modelInfo:T,localProvider:this.options.localProvider\nreturn{subagentConfig:x,effectiveReadonly:false,resolvedModelId:y,resolvedModelParameters:z,subagentIdToResume:';
+ const gpt='function abc(e){return __subscriptionConfigureTaskProps(e,__subscriptionNativeTaskProps(e),"chatgpt-codex/")}'+native.replace('function abc(','function __subscriptionNativeTaskProps(')+tail;
+ const patched=patchSubagentSettingsRuntime(gpt,CLAUDE_PREFIX);
+ assert.ok(patched.includes('function __subscriptionNativeTaskProps(e){return __subscriptionConfigureTaskProps(e,__claudeNativeTaskProps(e),"claude-subscription/")}'));
+ assert.equal(patched.split('function __claudeNativeTaskProps(').length,2);
+ assert.equal(patched.split('function __subscriptionNativeTaskProps(').length,2);
+ assert.ok(patched.includes('function abc(e){return __subscriptionConfigureTaskProps(e,__subscriptionNativeTaskProps(e),"chatgpt-codex/")}'));
+});
 test('serialized Explore helpers do not close over Node imports',()=>{
  for(const fn of [selectedModelIds,configureTaskProps,selectedParameters]){
   assert.equal(fn.toString().includes('requireSubscriptionPrefix'),false);

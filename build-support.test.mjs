@@ -63,6 +63,10 @@ test('combined installation cannot pass the preflight that archives stale Claude
   const expected=overlayLinkedGptOriginals(root,build);
   for(const file of files)assert.equal(expected[path.relative(root,file.path).split(path.sep).join('/')],file.patchedHash);
   assert.throws(()=>requireSupportedOriginals(root),/no verified macOS arm64 metadata/);
+  const stamped=JSON.parse(fs.readFileSync(manifestPath,'utf8'));
+  stamped.claudeManifest=path.join(dir,'installed.json');
+  fs.writeFileSync(manifestPath,JSON.stringify(stamped));
+  assert.throws(()=>overlayLinkedGptOriginals(root,build),/Restore Claude before reinstalling/);
 });
 
 test('leftover 3.20.17 uninstall reads the manifest without getBuild', t=>{
@@ -101,6 +105,7 @@ test('the shared installer leaves installed.json for the macOS restore wrapper',
   assert.match(source,/appMode:\s*requireWritableApp\(root\)/);
   assert.match(source,/setAppMode\(root,\s*0o700\)/);
   assert.match(source,/pending\.some\(x\s*=>\s*x\.path\s*===\s*f\.path\)/);
+  assert.match(source,/claudeManifest\s*=\s*manifestPath/);
 });
 
 function restoreFixture(t) {
@@ -150,6 +155,7 @@ test('restore rethrows non-ENOENT linked GPT write errors', t=>{
   const blocked=path.join(dir,'gpt-dir');
   fs.mkdirSync(blocked);
   assert.throws(()=>restoreInstalledFiles({files,linked:[{path:blocked,original:'{}'}]}),{code:'EISDIR'});
+  if(typeof process.getuid==='function'&&process.getuid()===0)return;
   const denied=path.join(dir,'gpt-denied.json');
   fs.writeFileSync(denied,'x');
   fs.chmodSync(denied,0o444);

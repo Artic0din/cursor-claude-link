@@ -61,6 +61,7 @@ export function writePatchedFiles({root, pending, version}) {
         const changed = manifest.files.find(x => x.path === f.path);
         if (changed) f.patchedHash = changed.patchedHash;
       }
+      value.claudeManifest = manifestPath;
       fs.writeFileSync(linked.path, JSON.stringify(value, null, 2));
     }
   } catch (error) {

@@ -45,7 +45,9 @@ export function patchSubagentSettingsRuntime(source, prefix) {
   const matches=[...source.matchAll(/function ([\w$]+)\(e\)\{const t=\(\)=>!1,([\w$]+)=[\w$]+\(e\),([\w$]+)=null!=\2\?\2:e\.localProvider;/g)];
   if(matches.length!==1)throw new Error('Local task configuration anchor is not unique');
   const match=matches[0],original=match[1];
-  source=once(source,match[0],'function '+original+'(e){return __subscriptionConfigureTaskProps(e,__subscriptionNativeTaskProps(e),'+quoted+')}'+match[0].replace('function '+original+'(','function __subscriptionNativeTaskProps('));
+  // Provider-specific native name so a GPT-first combined install does not
+  // redeclare __subscriptionNativeTaskProps and hoist away this wrapper.
+  source=once(source,match[0],'function '+original+'(e){return __subscriptionConfigureTaskProps(e,__claudeNativeTaskProps(e),'+quoted+')}'+match[0].replace('function '+original+'(','function __claudeNativeTaskProps('));
   const input=source.match(/modelId:([\w$]+)\.modelDetails\.modelId,(modelParameters:[\w$]+\.parameters,)?modelInfo:[\w$]+,localProvider:this\.options\.localProvider/);
   if(!input)throw new Error('Local task model input anchor missing');
   if(!input[2])source=once(source,input[0],input[0].replace(',modelInfo:',',modelParameters:'+input[1]+'.parameters,modelInfo:'));
