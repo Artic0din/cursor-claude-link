@@ -36,8 +36,8 @@ export function patchSubagentSettingsWorkbench(source, prefix) {
   const matches=[...source.matchAll(pattern)];
   if(matches.length!==1)throw new Error('Local subagent catalog anchor is not unique');
   const match=matches[0];
-  return once(source,match[0],','+match[1]+'=__subscriptionSelectedModelIds('+match[2]+','+match[4]+'.subagentModelOverrides,'+match[4]+'.requestedModel?.modelId??i?.modelId,'+JSON.stringify(prefix)+'),'+match[3]+'=i??this.createDefaultLocalModel('+match[4]+')')
-    +'\n'+definition(selectedModelIds,'__subscriptionSelectedModelIds')+'\n';
+  return once(source,match[0],','+match[1]+'=__ClaudeSelectedModelIds('+match[2]+','+match[4]+'.subagentModelOverrides,'+match[4]+'.requestedModel?.modelId??i?.modelId,'+JSON.stringify(prefix)+'),'+match[3]+'=i??this.createDefaultLocalModel('+match[4]+')')
+    +'\n'+definition(selectedModelIds,'__ClaudeSelectedModelIds')+'\n';
 }
 export function patchSubagentSettingsRuntime(source, prefix) {
   requireSubscriptionPrefix(prefix);
@@ -47,7 +47,7 @@ export function patchSubagentSettingsRuntime(source, prefix) {
   const match=matches[0],original=match[1];
   // Provider-specific native name so a GPT-first combined install does not
   // redeclare __subscriptionNativeTaskProps and hoist away this wrapper.
-  source=once(source,match[0],'function '+original+'(e){return __subscriptionConfigureTaskProps(e,__claudeNativeTaskProps(e),'+quoted+')}'+match[0].replace('function '+original+'(','function __claudeNativeTaskProps('));
+  source=once(source,match[0],'function '+original+'(e){return __ClaudeConfigureTaskProps(e,__claudeNativeTaskProps(e),'+quoted+')}'+match[0].replace('function '+original+'(','function __claudeNativeTaskProps('));
   const input=source.match(/modelId:([\w$]+)\.modelDetails\.modelId,(modelParameters:[\w$]+\.parameters,)?modelInfo:[\w$]+,localProvider:this\.options\.localProvider/);
   if(!input)throw new Error('Local task model input anchor missing');
   if(!input[2])source=once(source,input[0],input[0].replace(',modelInfo:',',modelParameters:'+input[1]+'.parameters,modelInfo:'));
@@ -55,6 +55,6 @@ export function patchSubagentSettingsRuntime(source, prefix) {
   if(params.length!==1)throw new Error('Resolved subagent parameters anchor is not unique');
   const p=params[0];
   source=once(source,p[0],p[0].replace('resolvedModelParameters:'+p[3]+',subagentIdToResume:',
-    'resolvedModelParameters:__subscriptionSelectedParameters(a,'+p[1]+','+p[2]+','+p[3]+','+quoted+'),subagentIdToResume:'));
-  return source+'\n'+definition(configureTaskProps,'__subscriptionConfigureTaskProps')+'\n'+definition(selectedParameters,'__subscriptionSelectedParameters')+'\n';
+    'resolvedModelParameters:__ClaudeSelectedParameters(a,'+p[1]+','+p[2]+','+p[3]+','+quoted+'),subagentIdToResume:'));
+  return source+'\n'+definition(configureTaskProps,'__ClaudeConfigureTaskProps')+'\n'+definition(selectedParameters,'__ClaudeSelectedParameters')+'\n';
 }

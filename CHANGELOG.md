@@ -8,11 +8,16 @@ The format follows Keep a Changelog.
 ### Fixed
 
 - Kept Claude and ChatGPT subscription models on This Mac's local runtime when the Agents Window target is This Mac (Remote Control), instead of sending those IDs through Cursor's cloud create RPC. Cloud and Remote Machine targets are unchanged.
+- Added Cursor 3.21.13 support on Apple Silicon with captured original Mac hashes and updated model-picker, routing, usage-card and subagent symbols.
+- Updated native validation to follow the current Responses adapter symbols and the task factory's `availableModels` contract.
+- Kept Claude MAX and Explore helpers separate from GPT helpers so a combined installation produces valid workbench and runtime modules while preserving both providers.
+- Routed subscription turns through Cursor's existing local execution strategy when Agent Host is enabled, covering new turns, resume and summarization without changing ordinary-model routing.
+- Registered the native execution provider through Agent Host's existing shared runtime, preserving host options and cleanup ownership; subscription turns now report a compatibility error in temporarily unsupported independent Agent Host modes.
 - Combined GPT-first install now records `claudeManifest` on the linked GPT manifest, uses a Claude-specific task-props native wrapper so GPT's wrapper stays callable, and skips the 0444 permission assertion when tests run as root.
 - `selectedModelIds` now keeps only Explore IDs that start with this provider prefix, so a foreign selection is not added to the Claude catalog.
 - Serialized Explore and Task-bubble helpers no longer close over Node imports (`requireSubscriptionPrefix`, `CLAUDE_PREFIX`). Patchers still validate the prefix; bubbles emit `CLAUDE_PREFIX` into the workbench bundle.
-- `--restore` reads the existing `installed.json` first and no longer requires `getBuild()` to succeed, so a leftover 3.20.17 patch can be uninstalled after this checkout became 3.21.12-only. 3.20.17 is not an install target; new installs still fail closed until darwin/arm64 hashes exist.
-- Combined-install GPT overlay is tested without requiring verified 3.21.12 hashes, so CI `test (22)` / `test (24)` can pass while metadata is still Windows.
+- `--restore` reads the existing `installed.json` first and no longer requires `getBuild()` to succeed, so a leftover 3.20.17 patch can be uninstalled after this checkout moved to a newer supported build.
+- Tested the combined-install GPT overlay separately and through the verified Mac build preflight.
 - Skipped linked GPT restore when that checkout's `installed.json` is gone, even if the parent directory still exists. Do not recreate an archived GPT manifest.
 - `check:actions` now asserts the same derived runtime insertions the 3.21 patcher writes, instead of pinning `_` / `e,r,s`.
 - Privatized Cursor.app to `0700` on every version installer before writing the bridge key into workbench assets, matching 3.20.17. Rollback restores recorded `appMode`.
@@ -30,7 +35,7 @@ The format follows Keep a Changelog.
 
 ### Changed
 
-- Target only Cursor 3.21.12. Older builders, installers, feature gates, and `advertiseMaxMode` splits are gone. One install/restore/write pipeline and one symbol-table row. Installation still fails closed until darwin/arm64 hashes are captured.
-- Restricted installation to the verified macOS build; retained Windows metadata is explicitly unsupported on Mac.
+- Target only Cursor 3.21.13 with verified Mac metadata and one install/restore/write pipeline and symbol-table row.
+- Restricted installation to the verified macOS build; unknown versions, commits and file hashes remain rejected.
 - Patched the selected app directly, without requiring a full-app backup.
-- Synced upstream patch definitions for Cursor 3.20.21, 3.20.23, 3.21.1, 3.21.9 and 3.21.12 (Explore settings, context/MAX, subagent lifecycle, queued follow-ups). Those versions stay rejected on macOS until `scripts/capture-hashes.mjs` records darwin/arm64 hashes.
+- Synced upstream Explore settings, context/MAX, subagent lifecycle and queued follow-up patches, then ported their symbols to the verified Mac build.

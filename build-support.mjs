@@ -97,8 +97,8 @@ export function requireSupportedOriginals(root) {
 
 // Restore reads the recorded manifest and the app's package.json version. It
 // must not call getBuild(): leftover 3.20.17 installs have to uninstall after
-// this checkout became 3.21.12-only, and 3.21.12 stays fail-closed until
-// darwin/arm64 hashes exist. 3.20.17 is not an install target.
+// this checkout moved to a newer supported build. 3.20.17 is not an install
+// target.
 export function readExistingManifest(root, manifestPath) {
   const manifest=JSON.parse(fs.readFileSync(manifestPath,'utf8'));
   const version=JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8')).version;

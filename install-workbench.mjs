@@ -7,6 +7,7 @@ import {patchSubagentBubbles} from './subagent-bubbles.mjs';
 import {CURSOR_VERSION, SUBSCRIPTION_PREFIX, workbenchEntry} from './install-anchors.mjs';
 import {once, patchLocalBridgeMode, patchRuntimeReasoning} from './patch-runtime.mjs';
 import {patchRemoteControlRouting} from './remote-control.mjs';
+import {patchAgentExecRegistration} from './agent-exec-registration.mjs';
 import {cursorRoot, linkedGptManifests, requireSupportedOriginals, restoreInstalledFiles, sha256} from './build-support.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -148,6 +149,7 @@ ${pickerSectionHelpersSrc}
     if (features.model) source = patchSubagentModel(source);
     if (features.settings) source = patchSubagentSettingsRuntime(source, prefix);
     if (features.actions) source = patchConversationActionsRuntime(source, prefix);
+    if (name === 'cursor-agent-exec') source = patchAgentExecRegistration(source);
     pending.push({path: target, content: source});
   }
   const main = path.join(root, 'out/main.js');
