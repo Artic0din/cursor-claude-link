@@ -36,5 +36,6 @@ export function patchSubagentBubbles(source, surface, version) {
   const anchor = 'async _waitForParentTaskBubbleIfPossible('+request+'){const '+parent+'='+trim+'('+request+'.parentConversationId),n='+trim+'('+request+'.toolCallId);if(!'+parent+'||!n)return;const i=this._composerDataService.getHandleIfLoaded('+parent+');';
   if (source.split(anchor).length !== 2) throw new Error('Subagent bubble anchor is not unique: '+surface);
   const call = '__ensureClaudeTaskBubble(this._composerDataService,'+request+',i,'+symbols.task+','+symbols.params+','+symbols.former+');';
-  return ensureClaudeTaskBubble.toString().replace('function ensureClaudeTaskBubble','function __ensureClaudeTaskBubble')+'\n'+source.replace(anchor,anchor+call);
+  return 'var CLAUDE_PREFIX='+JSON.stringify(CLAUDE_PREFIX)+';\n'+
+    ensureClaudeTaskBubble.toString().replace('function ensureClaudeTaskBubble','function __ensureClaudeTaskBubble')+'\n'+source.replace(anchor,anchor+call);
 }

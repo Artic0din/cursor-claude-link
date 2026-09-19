@@ -23,4 +23,10 @@ if(!pipeline.includes('setAppMode(root, 0o700)')&&!pipeline.includes('setAppMode
 if(!pipeline.includes('pending.some(x => x.path === f.path)')&&!pipeline.includes('pending.some(x=>x.path===f.path)'))throw new Error('install-workbench.mjs must hash-check only overlapping GPT paths');
 if(pipeline.includes('advertiseMaxMode'))throw new Error('MAX advertising is not a persisted version gate');
 if(!pipeline.includes('patchRuntimeReasoning(source, prefix)'))throw new Error('install-workbench.mjs must use the shared runtime reasoning patcher');
+const wrapper=fs.readFileSync(new URL('install.mjs',root),'utf8');
+if(wrapper.includes('getBuild('))throw new Error('install.mjs must not call getBuild; restore reads the existing manifest and install goes through requireSupportedOriginals');
+if(!wrapper.includes('readExistingManifest(root,manifestPath)')&&!wrapper.includes('readExistingManifest(root, manifestPath)'))throw new Error('install.mjs must read the existing manifest before restoring');
+if(!wrapper.includes('restoreInstalledFiles(manifest)'))throw new Error('install.mjs must restore leftover installs from the existing manifest');
+const bubbles=fs.readFileSync(new URL('subagent-bubbles.mjs',root),'utf8');
+if(!bubbles.includes('var CLAUDE_PREFIX=')||!bubbles.includes('JSON.stringify(CLAUDE_PREFIX)'))throw new Error('patchSubagentBubbles must emit CLAUDE_PREFIX into the workbench bundle');
 console.log('Source syntax and supported build metadata passed.');

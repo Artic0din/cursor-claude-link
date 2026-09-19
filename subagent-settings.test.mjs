@@ -35,6 +35,18 @@ test('unknown patch anchors fail before returning a modified bundle',()=>{
  assert.throws(()=>patchSubagentSettingsWorkbench('unrecognized',CLAUDE_PREFIX),/anchor/);
  assert.throws(()=>patchSubagentSettingsRuntime('unrecognized',CLAUDE_PREFIX),/anchor/);
 });
+test('serialized Explore helpers do not close over Node imports',()=>{
+ for(const fn of [selectedModelIds,configureTaskProps,selectedParameters]){
+  assert.equal(fn.toString().includes('requireSubscriptionPrefix'),false);
+ }
+ const selected=new Function(selectedModelIds.toString()+';return selectedModelIds')();
+ assert.deepEqual(selected(['native'],[selection],parent,CLAUDE_PREFIX),['native',child]);
+ const source=',a=e.localProviderAgentModelIds??[],n=i??this.createDefaultLocalModel(u)';
+ const patched=patchSubagentSettingsWorkbench(source,CLAUDE_PREFIX);
+ assert.equal(patched.includes('requireSubscriptionPrefix'),false);
+ const injected=new Function(patched.slice(patched.indexOf('function __subscriptionSelectedModelIds'))+';return __subscriptionSelectedModelIds')();
+ assert.deepEqual(injected(['native'],[selection],parent,CLAUDE_PREFIX),['native',child]);
+});
 test('model tooltip matches Cursor title, context and italic effort layout',()=>{
  assert.equal(modelTooltip('Model','Description',256000,'high').markdownContent,'**Model**  \nDescription\n\n256k context window\n\n*Version: high effort*');
  assert.match(modelTooltip('Model','Description',1000000,'xhigh',true).markdownContent,/1M context window\n\n\*Version: very high effort, fast\*$/);

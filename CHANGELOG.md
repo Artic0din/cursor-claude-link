@@ -7,6 +7,9 @@ The format follows Keep a Changelog.
 
 ### Fixed
 
+- Serialized Explore and Task-bubble helpers no longer close over Node imports (`requireSubscriptionPrefix`, `CLAUDE_PREFIX`). Patchers still validate the prefix; bubbles emit `CLAUDE_PREFIX` into the workbench bundle.
+- `--restore` reads the existing `installed.json` first and no longer requires `getBuild()` to succeed, so a leftover 3.20.17 patch can be uninstalled after this checkout became 3.21.12-only. 3.20.17 is not an install target; new installs still fail closed until darwin/arm64 hashes exist.
+- Combined-install GPT overlay is tested without requiring verified 3.21.12 hashes, so CI `test (22)` / `test (24)` can pass while metadata is still Windows.
 - Skipped linked GPT restore when that checkout's `installed.json` is gone, even if the parent directory still exists. Do not recreate an archived GPT manifest.
 - `check:actions` now asserts the same derived runtime insertions the 3.21 patcher writes, instead of pinning `_` / `e,r,s`.
 - Privatized Cursor.app to `0700` on every version installer before writing the bridge key into workbench assets, matching 3.20.17. Rollback restores recorded `appMode`.

@@ -3,14 +3,12 @@ import {requireSubscriptionPrefix} from './subscription-prefix.mjs';
 // Keep Cursor's native mode and model resolver. Only supply the model IDs and
 // parameters that its local runtime otherwise drops from the UI selection.
 export function selectedModelIds(existing, overrides, parentModelId, prefix) {
-  requireSubscriptionPrefix(prefix);
   if(!parentModelId?.startsWith(prefix))return existing;
   const selected=(overrides??[]).filter(o=>o.subagentType==='explore'&&o.selection?.case==='model')
     .map(o=>o.selection.value?.modelId).filter(id=>typeof id==='string'&&id.trim()&&id!=='default');
   return [...new Set([...existing,...selected])];
 }
 export function configureTaskProps(input, props, prefix) {
-  requireSubscriptionPrefix(prefix);
   if(!input.modelId?.startsWith(prefix))return props;
   const selected=input.subagentModelOverrides?.find(o=>o.subagentType==='explore'&&o.selection?.case==='model');
   const resolved=props.subagentModelOverrides?.explore;
@@ -20,7 +18,6 @@ export function configureTaskProps(input, props, prefix) {
       {modelId:resolved.modelId,parameters:(parameters??[]).map(({id,value})=>({id,value}))}:undefined}};
 }
 export function selectedParameters(options, config, modelId, fallback, prefix) {
-  requireSubscriptionPrefix(prefix);
   if(!options.parentRequestedModelName?.startsWith(prefix))return fallback;
   const selected=options.subagentModels?.__subscriptionSelection;
   return config.subagent_type?.type?.case==='explore'&&selected?.modelId===modelId&&config.userRequestedModelId===modelId

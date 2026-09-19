@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {getBuild, linkedGptManifests, requireSupportedOriginals, restoreInstalledFiles, sha256} from './build-support.mjs';
+import {getBuild, linkedGptManifests, overlayLinkedGptOriginals, readExistingManifest, requireSupportedOriginals, restoreInstalledFiles, sha256} from './build-support.mjs';
 
 test('default companion discovery uses the macOS application-support directory', () => {
   const previous=process.env.CURSOR_GPT_LINK_HOME;
@@ -33,7 +33,14 @@ test('unknown Cursor versions remain unsupported', t => {
   assert.throws(()=>getBuild(root),/Unsupported Cursor version/);
 });
 
-test('combined installation cannot pass the preflight that archives stale Claude state', {skip:process.platform!=='darwin'||process.arch!=='arm64'}, t=>{
+test('3.20.17 is not an install target', t => {
+  const root=fs.mkdtempSync(path.join(os.tmpdir(),'claude-old-build-'));
+  t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
+  fs.writeFileSync(path.join(root,'package.json'),JSON.stringify({version:'3.20.17'}));
+  assert.throws(()=>getBuild(root),/Unsupported Cursor version/);
+});
+
+test('combined installation cannot pass the preflight that archives stale Claude state', t=>{
   const dir=fs.mkdtempSync(path.join(os.tmpdir(),'claude-combined-test-'));
   const root=path.join(dir,'app'),state=path.join(dir,'gpt');
   const previous=process.env.CURSOR_GPT_LINK_HOME;
@@ -50,9 +57,39 @@ test('combined installation cannot pass the preflight that archives stale Claude
   });
   const manifestPath=path.join(state,'installed.json');
   fs.writeFileSync(manifestPath,JSON.stringify({files,claudeManifest:path.join(dir,'installed.json')}));
-  assert.throws(()=>requireSupportedOriginals(root),/Restore Claude before reinstalling/);
+  assert.throws(()=>overlayLinkedGptOriginals(root,build),/Restore Claude before reinstalling/);
+  assert.throws(()=>requireSupportedOriginals(root),/no verified macOS arm64 metadata/);
   fs.writeFileSync(manifestPath,JSON.stringify({files}));
-  assert.equal(requireSupportedOriginals(root).version,build.version);
+  const expected=overlayLinkedGptOriginals(root,build);
+  for(const file of files)assert.equal(expected[path.relative(root,file.path).split(path.sep).join('/')],file.patchedHash);
+  assert.throws(()=>requireSupportedOriginals(root),/no verified macOS arm64 metadata/);
+});
+
+test('leftover 3.20.17 uninstall reads the manifest without getBuild', t=>{
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'claude-leftover-restore-'));
+  t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));
+  const root=path.join(dir,'app');
+  fs.mkdirSync(root);
+  fs.writeFileSync(path.join(root,'package.json'),JSON.stringify({version:'3.20.17'}));
+  const file=path.join(root,'out.js'),backup=path.join(dir,'out.js.bak');
+  fs.writeFileSync(file,'patched');fs.writeFileSync(backup,'original');
+  const manifestPath=path.join(dir,'installed.json');
+  const manifest={version:'3.20.17',files:[{path:file,backup,originalHash:sha256(Buffer.from('original')),patchedHash:sha256(Buffer.from('patched'))}],linked:[],appMode:0o755};
+  fs.writeFileSync(manifestPath,JSON.stringify(manifest));
+  const loaded=readExistingManifest(root,manifestPath);
+  assert.equal(loaded.version,'3.20.17');
+  assert.throws(()=>getBuild(root),/Unsupported Cursor version/);
+  restoreInstalledFiles(loaded);
+  assert.equal(fs.readFileSync(file,'utf8'),'original');
+});
+
+test('the macOS wrapper restores from the existing manifest without getBuild', () => {
+  const dir=path.dirname(fileURLToPath(import.meta.url));
+  const source=fs.readFileSync(path.join(dir,'install.mjs'),'utf8');
+  assert.equal(source.includes('getBuild('),false);
+  assert.match(source,/readExistingManifest\(root,\s*manifestPath\)/);
+  assert.match(source,/restoreInstalledFiles\(manifest\)/);
+  assert.match(source,/requireSupportedOriginals\(root\)/);
 });
 
 test('the shared installer leaves installed.json for the macOS restore wrapper', () => {
