@@ -1,4 +1,5 @@
-import {requireSubscriptionPrefix} from './subscription-prefix.mjs';
+import {CLAUDE_PREFIX,requireSubscriptionPrefix} from './subscription-prefix.mjs';
+import {patchAgentHostRouting} from './agent-host-routing.mjs';
 
 export function once(source, before, after) {
   if (source.split(before).length !== 2) throw new Error('Unsupported or repeated patch anchor: ' + before.slice(0, 100));
@@ -21,6 +22,7 @@ export function patchRuntimeReasoning(source, prefix) {
 }
 
 export function patchLocalBridgeMode(source, surface) {
+  source=patchAgentHostRouting(source,CLAUDE_PREFIX);
   if (source.includes('const __chatgptLocal=__isChatgptBridgeModel(u?.requestedModel?.modelId??i?.modelId);')) {
     return once(source, 'const __chatgptLocal=__isChatgptBridgeModel(u?.requestedModel?.modelId??i?.modelId);',
       'const __chatgptLocal=__isChatgptBridgeModel(u?.requestedModel?.modelId??i?.modelId)||__isClaudeBridgeModel(u?.requestedModel?.modelId??i?.modelId);');

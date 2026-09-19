@@ -19,11 +19,25 @@ test('default companion discovery uses the macOS application-support directory',
   }
 });
 
-test('historical Windows manifests cannot be mistaken for verified Mac builds', t => {
+test('the retired 3.21.12 build remains unsupported', t => {
   const root=fs.mkdtempSync(path.join(os.tmpdir(),'claude-build-test-'));
   t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
   fs.writeFileSync(path.join(root,'package.json'),JSON.stringify({version:'3.21.12'}));
-  assert.throws(()=>getBuild(root),/no verified macOS arm64 metadata/);
+  assert.throws(()=>getBuild(root),/Unsupported Cursor version/);
+});
+
+test('the original macOS 3.21.13 build is accepted and another commit is rejected', {skip:process.platform!=='darwin'}, t => {
+  const root=fs.mkdtempSync(path.join(os.tmpdir(),'claude-current-build-'));
+  t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
+  fs.writeFileSync(path.join(root,'package.json'),JSON.stringify({version:'3.21.13'}));
+  const product=path.join(root,'product.json');
+  fs.writeFileSync(product,JSON.stringify({commit:'e44a49c17e334d442e58bbde931d791200f014a0'}));
+  const build=getBuild(root);
+  assert.equal(build.platform,'darwin');
+  assert.equal(build.arch,'arm64');
+  assert.equal(Object.keys(build.files).length,6);
+  fs.writeFileSync(product,JSON.stringify({commit:'another-build'}));
+  assert.throws(()=>getBuild(root),/Unsupported Cursor commit/);
 });
 
 test('unknown Cursor versions remain unsupported', t => {
@@ -47,7 +61,7 @@ test('combined installation cannot pass the preflight that archives stale Claude
   t.after(()=>{if(previous===undefined)delete process.env.CURSOR_GPT_LINK_HOME;else process.env.CURSOR_GPT_LINK_HOME=previous;fs.rmSync(dir,{recursive:true,force:true});});
   process.env.CURSOR_GPT_LINK_HOME=state;
   fs.mkdirSync(root,{recursive:true});fs.mkdirSync(state);
-  const build=JSON.parse(fs.readFileSync(new URL('./build-3.21.12.json',import.meta.url),'utf8'));
+  const build=JSON.parse(fs.readFileSync(new URL('./build-3.21.13.json',import.meta.url),'utf8'));
   fs.writeFileSync(path.join(root,'package.json'),JSON.stringify({version:build.version}));
   const files=Object.entries(build.files).map(([relative,originalHash])=>{
     const file=path.join(root,relative);
@@ -58,11 +72,11 @@ test('combined installation cannot pass the preflight that archives stale Claude
   const manifestPath=path.join(state,'installed.json');
   fs.writeFileSync(manifestPath,JSON.stringify({files,claudeManifest:path.join(dir,'installed.json')}));
   assert.throws(()=>overlayLinkedGptOriginals(root,build),/Restore Claude before reinstalling/);
-  assert.throws(()=>requireSupportedOriginals(root),/no verified macOS arm64 metadata/);
+  if(process.platform==='darwin')assert.throws(()=>requireSupportedOriginals(root),/Restore Claude before reinstalling/);
   fs.writeFileSync(manifestPath,JSON.stringify({files}));
   const expected=overlayLinkedGptOriginals(root,build);
   for(const file of files)assert.equal(expected[path.relative(root,file.path).split(path.sep).join('/')],file.patchedHash);
-  assert.throws(()=>requireSupportedOriginals(root),/no verified macOS arm64 metadata/);
+  if(process.platform==='darwin')assert.equal(requireSupportedOriginals(root).version,build.version);
   const stamped=JSON.parse(fs.readFileSync(manifestPath,'utf8'));
   stamped.claudeManifest=path.join(dir,'installed.json');
   fs.writeFileSync(manifestPath,JSON.stringify(stamped));

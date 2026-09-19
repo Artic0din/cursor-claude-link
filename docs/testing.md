@@ -2,16 +2,53 @@
 
 ## Verified macOS build
 
-This fork targets Cursor 3.21.12 only. The 3.21.12 metadata is still the upstream Windows bundle and is rejected on macOS until `scripts/capture-hashes.mjs` records darwin/arm64 hashes from an original Mac app.
-The exact Cursor commit is `05ddb9e824590e2c1db6bd2548dd71bf67ac9d20`.
+This fork targets Cursor 3.21.13 only.
+The six original-file hashes were captured from the signed macOS Apple Silicon application with `scripts/capture-hashes.mjs`.
+The exact Cursor commit is `e44a49c17e334d442e58bbde931d791200f014a0`.
 The minimum supported OS is macOS 26.
 A matching version label alone is insufficient to establish compatibility.
 
 ## Current checks
 
-All 78 local tests passed (7 darwin-only checks skipped on this Linux runner), covering bridge error handling, external tool naming, attachments, token accounting, subagent registration, Explore settings, conversation actions, exact POSIX process matching and startup after the launching host exits.
+All 105 local tests passed on macOS with Node.js 26.8.2, with no skipped tests.
+They cover bridge error handling, external tool naming, attachments, token accounting, subagent registration, Explore settings, conversation actions, exact POSIX process matching and startup after the launching host exits.
+Both workbench and runtime patch candidates passed syntax checks and native behavior checks for error/tool-call responses, subagents, queued actions, settings rendering and context display using synthetic inputs.
+Combined-provider regressions parse the generated helpers as ES modules and check MAX selection, Explore model selection and selected parameters for both providers.
+The native runtime budget check also verifies that selected context is capped by the provider's advertised window.
+Agent Host routing regressions reproduce the injected host strategy incorrectly receiving subscription turns.
+Native testing then exposed a missing workspace execution provider while Agent Host was enabled.
+Activation regressions verify that the existing shared host runtime registers the native provider while preserving host context, options, state getters and cleanup ownership.
+Independent Agent Host modes never initialize a second legacy runtime; this avoids duplicate commands and competing rules, subagent, plugin and background-shell provider ownership.
+The existing local-loop canvas registration stays unchanged, and combined installation applies the shared registration patch once.
+They cover the new-turn, resume and summarize entrypoints, requested-model precedence, the native fallback, unchanged argument and cancellation identities, and host disposal.
+The native-bundle check evaluates the actual constructor strategy expression and local delegate on both workbench surfaces, with shared-runtime subscription turns allowed and ordinary models retained on the host strategy.
+Temporary compatibility limitation: subscription turns reject before native dispatch when an injected Agent Host strategy has either `cursor_agent_host_move_exec` or `agent_host_local_loop` enabled.
+These modes are unsupported by this patch; the checks establish the compatibility error, not inference or tool support in those modes.
+The native fallback, including a null injected strategy, remains available without evaluating those host-only gates.
+The routing verifier executes the actual renderer feature-gate method, reproduces its missing-options TypeError and verifies that both checks supply the required options argument.
+These synthetic checks read native bundles and write disposable candidates; live installation and model inference were verified separately below.
 Repeating a combined installation is rejected before its active restoration manifest can be archived; the regression also permits a GPT-only installation.
-The repeated-install check also passed against the real combined app, leaving both manifests and all six app resources unchanged.
+
+## Current live installation validation
+
+The combined GPT-first, Claude-second installation passed signing, Electron native loading and exact installation-manifest checks on Cursor 3.21.13.
+Both bridge workers started automatically with Cursor using Node.js 26.8.2.
+Claude Code reported version 2.1.276.
+
+In the native IDE, **Claude Subscription — Sonnet 5, Medium, 1M** completed an authenticated file-write and readback request in a temporary local workspace.
+The resulting `claude-bridge-smoke.txt` contained exactly `CLAUDE_32113_OK\n`, including the final newline, verified independently from disk.
+Cursor displayed the native `Read` result for lines 1–2 and the final response `CLAUDE_32113_OK`.
+The bridge completed three inference steps in this tool round trip.
+This verifies real Cursor tool execution with subscription inference; selecting 1M does not establish a large-context workload test.
+
+This live result used Agent Host's shared workspace runtime with both `cursor_agent_host_move_exec` and `agent_host_local_loop` disabled.
+Independent Agent Host modes remain temporarily unsupported and produce the compatibility error described above.
+Live Agents Window, SSH, subagents, cancellation and authentication renewal remain unverified.
+
+## Earlier live installation validation
+
+The following live results were recorded on Cursor 3.20.17 and do not establish 3.21.13 runtime coverage.
+The repeated-install check passed against that combined app, leaving both manifests and all six app resources unchanged.
 
 Both links installed directly in `/Applications/Cursor.app`, GPT first and Claude second, with an existing Apple signing identity.
 Strict signature verification, Electron native loading and both installation manifests passed after combined installation.
@@ -21,7 +58,8 @@ Cloud agents are unsupported: use a local workspace and the This Mac environment
 A native Claude file-edit request reproduced a collision between Cursor tool names and disabled Claude Code built-ins.
 After assigning distinct transport names, replaying that captured request returned the expected Cursor `Write` call.
 The live subscription check passed a function-call/result round trip and automatic selection of an external `Write` tool.
-That check requests a write without executing it; the final post-fix Cursor file edit and readback remains pending because desktop automation could not unlock the Mac.
+That earlier check requested a write without executing it; the 3.20.17 native edit and readback could not be completed because desktop automation could not unlock the Mac.
+The current 3.21.13 native edit and readback result is recorded above.
 
 Signing fixtures verify preservation of hardened runtime and entitlements after patching and resource restoration.
 The fixture uses a disposable executable and an injected test signer; production requires an available Apple identity and refuses ad-hoc signing.
@@ -72,14 +110,17 @@ They described bridge tool calls, image/PDF input, token accounting and syntheti
 They do not establish macOS installer, GUI, authentication renewal or SSH coverage.
 The preceding test history remains in Git.
 
-Fresh macOS SSH file edits, live subagents, cancellation, fresh sign-in/renewal and large-context workloads remain unverified.
+Live Agents Window, fresh macOS SSH file edits, live subagents, cancellation, fresh sign-in/renewal and large-context workloads remain unverified.
 Fast and Ultracode are not implemented.
 
 ### Explore model settings
 
 The workbench now includes the explicitly selected Explore model in the local runtime catalog when that ID starts with `claude-subscription/`. Foreign Explore IDs stay out of this provider's catalog so the runtime does not send them through the Claude bridge. Previously a same-prefix selection missing from `localProviderAgentModelIds` silently became Inherit. The patch also carries the selected model parameters into the client subagent request and preserves parent parameters for inherited models. Default, Inherit and Disabled continue through Cursor's native resolver.
 
-Unit tests reproduce the missing-catalog fallback. This fork keeps the 3.21.12 workbench and runtime patches and still rejects unverified Windows hashes on macOS. Tooltip tests cover every effort and context variant using the native Markdown layout. A live SSH Explore run with a different selected model still needs manual confirmation.
+Unit tests reproduce the missing-catalog fallback.
+The 3.21.13 native task factory receives `availableModels` entries with `modelId` and resolves them internally through catalog entries with `id`; the native check exercises both sides of that contract.
+Tooltip tests cover every effort and context variant using the native Markdown layout.
+A live SSH Explore run with a different selected model still needs manual confirmation.
 
 ### Context and MAX mode
 
