@@ -120,6 +120,7 @@ test('the shared installer leaves installed.json for the macOS restore wrapper',
   assert.match(source,/setAppMode\(root,\s*0o700\)/);
   assert.match(source,/pending\.some\(x\s*=>\s*x\.path\s*===\s*f\.path\)/);
   assert.match(source,/claudeManifest\s*=\s*manifestPath/);
+  assert.match(source,/patchRemoteControlRouting\(source,\s*surfaceName\)/);
 });
 
 function restoreFixture(t) {

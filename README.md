@@ -25,7 +25,7 @@ Companion project: [cursor-gpt-link](https://github.com/Artic0din/cursor-gpt-lin
 This fork targets Cursor **3.21.13** only.
 Original Mac file hashes were captured from the signed Apple Silicon app and the patch candidates passed syntax and native behavior checks.
 Older Cursor versions are not installation targets.
-Use a local workspace with the **This Mac** environment; cloud agents cannot reach these local bridges and are unsupported.
+Use a local workspace with **This Mac** or **This Mac (Remote Control)**. Cloud and Remote Machine cannot reach these local bridges and remain unsupported.
 The build metadata is specific to macOS; Windows and Linux clients are rejected.
 See [testing notes](docs/testing.md).
 
@@ -135,6 +135,14 @@ For a normal project update, close Cursor, restore the patch, run `git pull`, th
 
 Cursor updates can replace the patched files. **Do not restore old backups over a newer Cursor build.** Check the supported version table and follow [the update notes](docs/testing.md#cursor-updates). There is no force option.
 
+## This Mac (Remote Control)
+
+Remote Control still runs on this computer, but Cursor creates those agents through the cloud agent RPC.
+That RPC rejects `claude-subscription/` model IDs (`BAD_MODEL_NAME`).
+The patch keeps subscription models on the same local repository path as **This Mac**, so the existing local bridge serves them.
+Cursor-native models on Remote Control are unchanged.
+Cloud and Remote Machine remain unsupported.
+
 ## Remote SSH
 
 Inference runs on the local Mac through Cursor's dedicated local runtime. Cursor's existing workspace path handles tools on the SSH host. The remote machine should not need Claude Code, copied credentials or a forwarded bridge port.
@@ -165,7 +173,7 @@ In particular, [Fable can use usage credits on some plans](https://code.claude.c
 - Ultracode is not an effort level above Max. It combines xhigh reasoning with Claude Code's dynamic workflow orchestration. That orchestration is not implemented in this Cursor adapter, so no misleading Ultracode option is shown. See [Claude's model configuration](https://code.claude.com/docs/en/model-config#adjust-effort-level).
 - Initial model entries are embedded during installation. A failed catalog refresh can leave stale entries visible; the provider still decides whether a request is accepted.
 - Claude Code authentication, catalog and usage behavior can change separately from Cursor. A refresh-lock error can require retrying later or signing in again through Claude Code.
-- Cloud agents, Windows and Linux clients are unsupported. Only macOS 26+ on Apple Silicon is supported. Live Agents Window and Claude SSH coverage is still needed.
+- Cloud agents, Remote Machine, Windows and Linux clients are unsupported. This Mac and This Mac (Remote Control) use the local bridge. Only macOS 26+ on Apple Silicon is supported. Live Agents Window and Claude SSH coverage is still needed.
 
 ## Reconnecting or failed requests
 

@@ -23,6 +23,10 @@ if(!pipeline.includes('setAppMode(root, 0o700)')&&!pipeline.includes('setAppMode
 if(!pipeline.includes('pending.some(x => x.path === f.path)')&&!pipeline.includes('pending.some(x=>x.path===f.path)'))throw new Error('install-workbench.mjs must hash-check only overlapping GPT paths');
 if(pipeline.includes('advertiseMaxMode'))throw new Error('MAX advertising is not a persisted version gate');
 if(!pipeline.includes('patchRuntimeReasoning(source, prefix)'))throw new Error('install-workbench.mjs must use the shared runtime reasoning patcher');
+if(!pipeline.includes('patchRemoteControlRouting(source, surfaceName)'))throw new Error('install-workbench.mjs must keep Remote Control subscription turns on the local repo');
+const remoteControl=fs.readFileSync(new URL('remote-control.mjs',root),'utf8');
+if(!remoteControl.includes('chatgpt-codex/')||!remoteControl.includes('claude-subscription/'))throw new Error('remote-control.mjs must recognize both subscription prefixes');
+if(remoteControl.includes('requireSubscriptionPrefix'))throw new Error('serialized Remote Control helper must not close over Node imports');
 if(!pipeline.includes('value.claudeManifest = manifestPath')&&!pipeline.includes('value.claudeManifest=manifestPath'))throw new Error('install-workbench.mjs must mark the linked GPT manifest as Claude-owned');
 const wrapper=fs.readFileSync(new URL('install.mjs',root),'utf8');
 if(wrapper.includes('getBuild('))throw new Error('install.mjs must not call getBuild; restore reads the existing manifest and install goes through requireSupportedOriginals');

@@ -7,6 +7,7 @@ The format follows Keep a Changelog.
 
 ### Fixed
 
+- Kept Claude and ChatGPT subscription models on This Mac's local runtime when the Agents Window target is This Mac (Remote Control), instead of sending those IDs through Cursor's cloud create RPC. Cloud and Remote Machine targets are unchanged.
 - Added Cursor 3.21.13 support on Apple Silicon with captured original Mac hashes and updated model-picker, routing, usage-card and subagent symbols.
 - Updated native validation to follow the current Responses adapter symbols and the task factory's `availableModels` contract.
 - Kept Claude MAX and Explore helpers separate from GPT helpers so a combined installation produces valid workbench and runtime modules while preserving both providers.
