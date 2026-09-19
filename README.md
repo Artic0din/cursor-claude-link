@@ -21,7 +21,7 @@ Companion project: [cursor-gpt-link](https://github.com/Artic0din/cursor-gpt-lin
 | Fast and Ultracode | Not implemented |
 
 This fork targets Cursor **3.21.12** only. Installation stays rejected until `scripts/capture-hashes.mjs` records darwin/arm64 hashes from an original Mac app. Older Cursor versions are not supported.
-Use a local workspace with the **This Mac** environment; cloud agents cannot reach these local bridges and are unsupported.
+Use a local workspace with **This Mac** or **This Mac (Remote Control)**. Cloud and Remote Machine cannot reach these local bridges and remain unsupported.
 The retained Windows `build-3.21.12.json` is historical upstream metadata and is rejected on macOS.
 See [testing notes](docs/testing.md).
 

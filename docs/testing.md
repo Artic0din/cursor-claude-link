@@ -9,7 +9,7 @@ A matching version label alone is insufficient to establish compatibility.
 
 ## Current checks
 
-All 78 local tests passed (7 darwin-only checks skipped on this Linux runner), covering bridge error handling, external tool naming, attachments, token accounting, subagent registration, Explore settings, conversation actions, exact POSIX process matching and startup after the launching host exits.
+All 96 local tests passed, covering bridge error handling, external tool naming, attachments, token accounting, subagent registration, Explore settings, conversation actions, Remote Control createAgent routing, exact POSIX process matching and startup after the launching host exits.
 Repeating a combined installation is rejected before its active restoration manifest can be archived; the regression also permits a GPT-only installation.
 The repeated-install check also passed against the real combined app, leaving both manifests and all six app resources unchanged.
 
