@@ -1,3 +1,4 @@
+import {maxModeVariant} from './max-mode.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {subscriptionEnvironment, contextEnvironment, prepareRequest as prepare} from './runner.mjs';
@@ -47,6 +48,7 @@ test('model picker keeps Claude aliases separate with image capability and no Fa
   }
   const listed=providerModels(catalog);
   assert.equal(listed[0].id,'claude-subscription/sonnet');
+  assert.equal(listed[0].context_window,listed[0].capabilities.context_length);
   assert.deepEqual(listed[0].api_types,['openai_responses']);
 });
 
@@ -156,6 +158,9 @@ test('autostart restarts only the Claude bridge worker',()=>{
   assert.equal(src.includes('windowsHide'),false);
   assert.equal(src.includes('win32'),false);
   assert.equal(src.includes('cursor-gpt-link'),false);
+  const withState=buildBridgeLauncher({nodePath,bridgePath,stateDir:'/tmp/claude-state'});
+  assert.match(withState,/CURSOR_CLAUDE_LINK_HOME/);
+  assert.equal(withState.includes('CURSOR_GPT_LINK_HOME'),false);
 });
 test('installer rejects non-macOS Apple Silicon clients',async()=>{
   const {assertSupportedClient,macOSProductVersion}=await import('./build-support.mjs');
@@ -169,4 +174,52 @@ test('installer rejects non-macOS Apple Silicon clients',async()=>{
   }else{
     assert.throws(()=>assertSupportedClient(build),/macOS 26\+/);
   }
+});
+
+test('each Claude variant describes its selected context and effort',()=>{
+ for(const m of pickerModels(contextCatalog))for(const v of m.variants){
+  const effort=v.parameterValues.find(p=>p.id==='reasoning')?.value;
+  const context=v.parameterValues.find(p=>p.id==='context')?.value;
+  const text=v.tooltipData.markdownContent;
+  assert.ok(text.includes(context==='1000000'?'1M context window':'200k context window'));
+  if(effort)assert.ok(text.endsWith('*Version: '+(effort==='xhigh'?'very high':effort)+' effort*'));
+  else assert.equal(text.includes('Version:'),false);
+  assert.equal(text.includes('Context:'),false);
+ }
+});
+
+test('MAX selects the Claude 1M variant and keeps effort in both directions',()=>{
+ const picker=pickerModels(contextCatalog).find(m=>m.name==='claude-subscription/opus');
+ assert.equal(picker.supportsMaxMode,true);
+ assert.equal(picker.variants.filter(v=>v.isDefaultMaxConfig).length,1);
+ for(const variant of picker.variants)for(const maxMode of [false,true]){
+  const selected=maxModeVariant(picker,variant.parameterValues,maxMode);
+  const context=selected.parameterValues.find(p=>p.id==='context').value;
+  const effort=selected.parameterValues.find(p=>p.id==='reasoning').value;
+  assert.equal(context,maxMode?'1000000':'200000');
+  assert.equal(effort,variant.parameterValues.find(p=>p.id==='reasoning').value);
+  const request=prepare({model:picker.name,input:[],reasoning:{effort},claude_context:Number(context)},contextCatalog);
+  assert.equal(request.contextTokens,Number(context));
+  assert.equal(request.model,maxMode?'opus[1m]':'opus');
+ }
+ const meta=providerModels(contextCatalog);
+ const opus=meta.find(m=>m.id===picker.name),haiku=meta.find(m=>m.id.endsWith('/haiku'));
+ assert.equal(opus.capabilities.context_length,1000000);
+ assert.equal(opus.context_window,1000000);
+ assert.equal(haiku.capabilities.context_length,200000);
+ assert.equal(haiku.context_window,200000);
+});
+
+test('picker advertises MAX for extended models and keeps the 200K/1M split',()=>{
+ const models=pickerModels(contextCatalog),provider=providerModels(contextCatalog);
+ for(const model of models){
+  const extended=model.parameterDefinitions.some(p=>p.id==='context');
+  assert.equal(model.supportsMaxMode,extended);
+  assert.equal(model.contextTokenLimit,200000);
+  const maximum=extended?1000000:200000;
+  assert.equal(model.contextTokenLimitForMaxMode,maximum);
+  const listed=provider.find(p=>p.id===model.name);
+  assert.equal(listed.capabilities.context_length,maximum);
+  assert.equal(listed.context_window,maximum);
+ }
 });

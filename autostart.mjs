@@ -17,7 +17,7 @@ const {execFile,spawn}=require("node:child_process");
 const start=()=>{
   const worker=spawn(${JSON.stringify(nodePath)},[${JSON.stringify(bridgePath)}],{
     detached:true,stdio:["ignore","ignore",2],
-    env:{...process.env,ELECTRON_RUN_AS_NODE:undefined,...${JSON.stringify(stateDir?{CURSOR_GPT_LINK_HOME:stateDir}:{})}}
+    env:{...process.env,ELECTRON_RUN_AS_NODE:undefined,...${JSON.stringify(stateDir?{CURSOR_CLAUDE_LINK_HOME:stateDir}:{})}}
   });
   worker.on("error",error=>console.error("Local bridge startup failed:",error.message));worker.unref();
 };

@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
-import {ensureClaudeTaskBubble} from './subagent-bubbles.mjs';
+import {ensureClaudeTaskBubble,patchSubagentBubbles} from './subagent-bubbles.mjs';
+import {normalizeClaudeSubagentModel} from './subagent-model.mjs';
 import test from 'node:test';
 function fixture() {
  const bubbles=new Map(),created=[];
@@ -32,7 +33,18 @@ test('missing parent or ToolFormer does not signal a successful creation',()=>{
  ensureClaudeTaskBubble(f.service,f.request,undefined,19,Object,3);assert.equal(f.created.length,0);
 });
 
-import {normalizeClaudeSubagentModel} from './subagent-model.mjs';
+test('serialized Task-bubble helper emits CLAUDE_PREFIX into the bundle',()=>{
+ const anchor='async _waitForParentTaskBubbleIfPossible(e){const t=$K(e.parentConversationId),n=$K(e.toolCallId);if(!t||!n)return;const i=this._composerDataService.getHandleIfLoaded(t);';
+ const patched=patchSubagentBubbles(anchor,'desktop','3.21.12');
+ assert.match(patched,/var CLAUDE_PREFIX="claude-subscription\/"/);
+ const helper=patched.slice(0,patched.indexOf(anchor));
+ const isolated=new Function(helper+';return __ensureClaudeTaskBubble')();
+ const f=fixture();
+ isolated(f.service,f.request,f.parent,19,class Params{constructor(values){Object.assign(this,values);}},3);
+ assert.equal(f.created.length,1);
+ isolated(f.service,{...f.request,modelId:'ordinary'},f.parent,19,Object,3);
+ assert.equal(f.created.length,1);
+});
 test('blank optional Task models use native inheritance without mutating input',()=>{
  for(const requestedModel of ['', '  ']){
   const input={parentModelId:'claude-subscription/test',requestedModel,forceModelId:'policy-model'};

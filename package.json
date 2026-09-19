@@ -6,7 +6,7 @@
   "description": "Use local Claude Code subscription models in the Cursor agent harness on macOS 26+ (Apple Silicon)",
   "scripts": {
     "doctor": "node doctor.mjs",
-    "test": "node --test test.mjs bridge.test.mjs attachments.test.mjs token-usage.test.mjs subagent-bubbles.test.mjs autostart.test.mjs macos.test.mjs build-support.test.mjs",
+    "test": "node --test test.mjs bridge.test.mjs attachments.test.mjs token-usage.test.mjs subagent-bubbles.test.mjs autostart.test.mjs macos.test.mjs build-support.test.mjs subagent-settings.test.mjs subagent-lifecycle.test.mjs conversation-actions.test.mjs",
     "test:live": "node live-test.mjs",
     "install:patch": "node patcher.mjs install",
     "uninstall": "node patcher.mjs restore",
@@ -18,7 +18,9 @@
     "check:source": "node scripts/check-source.mjs",
     "check:runtime": "node scripts/check-runtime.mjs",
     "test:attachments": "node scripts/test-attachments.mjs",
-    "check:subagents": "node scripts/check-subagents.mjs"
+    "check:subagents": "node scripts/check-subagents.mjs",
+    "check:actions": "node scripts/check-conversation-actions.mjs",
+    "check:ui": "node scripts/check-ui.mjs"
   },
   "engines": {
     "node": ">=22"

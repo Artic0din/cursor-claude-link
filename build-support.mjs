@@ -4,8 +4,30 @@ import os from 'node:os';
 import crypto from 'node:crypto';
 import {execFileSync} from 'node:child_process';
 import {assertSupportedMac} from './macos.mjs';
+import {CURSOR_VERSION} from './install-anchors.mjs';
 
 export const sha256=value=>crypto.createHash('sha256').update(value).digest('hex');
+
+// Version `--restore` helpers leave installed.json in place so install.mjs can
+// re-sign Cursor and then archive the manifest.
+export function restoreInstalledFiles(manifest) {
+  for (const file of manifest.files) {
+    const current=sha256(fs.readFileSync(file.path));
+    if ((current!==file.patchedHash&&current!==file.originalHash)||sha256(fs.readFileSync(file.backup))!==file.originalHash)
+      throw new Error('Files changed. Restore stopped: '+file.path);
+  }
+  for (const file of manifest.files)
+    if (sha256(fs.readFileSync(file.path))===file.patchedHash) fs.copyFileSync(file.backup,file.path);
+  for (const linked of manifest.linked??[]) {
+    try {
+      if (typeof linked?.path!=='string'||typeof linked?.original!=='string') continue;
+      if (!fs.existsSync(linked.path)) continue;
+      fs.writeFileSync(linked.path,linked.original);
+    } catch (error) {
+      if (error?.code!=='ENOENT') throw error;
+    }
+  }
+}
 
 export function macOSProductVersion() {
   if(process.platform!=='darwin')return null;
@@ -36,9 +58,9 @@ export function linkedGptManifests() {
 }
 export function getBuild(root) {
   const version=JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8')).version;
-  if(!['3.20.7','3.20.11','3.20.17','3.20.21'].includes(version))throw new Error('Unsupported Cursor version: '+version);
+  if(version!==CURSOR_VERSION)throw new Error('Unsupported Cursor version: '+version);
   const build=JSON.parse(fs.readFileSync(new URL('./build-'+version+'.json',import.meta.url),'utf8'));
-  if(build.platform!=='darwin'||build.arch!=='arm64')throw new Error('Cursor '+version+' has no verified macOS arm64 metadata. Use Cursor 3.20.17.');
+  if(build.platform!=='darwin'||build.arch!=='arm64')throw new Error('Cursor '+version+' has no verified macOS arm64 metadata. Capture hashes from an original Mac app.');
   assertSupportedClient(build);
   if(JSON.parse(fs.readFileSync(path.join(root,'product.json'),'utf8')).commit!==build.commit)throw new Error('Unsupported Cursor commit.');
   return build;
@@ -48,8 +70,8 @@ export function verifyFiles(root,files) {
     if(sha256(fs.readFileSync(path.join(root,relative)))!==expected)throw new Error('Unrecognized or modified Cursor file: '+relative);
   }
 }
-export function requireSupportedOriginals(root) {
-  const build=getBuild(root),expected={...build.files};
+export function overlayLinkedGptOriginals(root, build) {
+  const expected={...build.files};
   for(const manifestPath of linkedGptManifests().filter(p=>fs.existsSync(p))){
     const manifest=JSON.parse(fs.readFileSync(manifestPath,'utf8'));
     const matching=manifest.files.filter(f=>path.resolve(f.path).startsWith(path.resolve(root)+path.sep));
@@ -64,6 +86,23 @@ export function requireSupportedOriginals(root) {
       expected[relative]=entry.patchedHash;
     }
   }
-  verifyFiles(root,expected);
+  return expected;
+}
+
+export function requireSupportedOriginals(root) {
+  const build=getBuild(root);
+  verifyFiles(root,overlayLinkedGptOriginals(root,build));
   return build;
+}
+
+// Restore reads the recorded manifest and the app's package.json version. It
+// must not call getBuild(): leftover 3.20.17 installs have to uninstall after
+// this checkout became 3.21.12-only, and 3.21.12 stays fail-closed until
+// darwin/arm64 hashes exist. 3.20.17 is not an install target.
+export function readExistingManifest(root, manifestPath) {
+  const manifest=JSON.parse(fs.readFileSync(manifestPath,'utf8'));
+  const version=JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8')).version;
+  if(manifest.version!==version||manifest.files.some(file=>typeof file.path!=='string'||!file.path.startsWith(root+path.sep)))
+    throw new Error('The installation belongs to another Cursor app or version. Reinstall official Cursor instead of restoring these files.');
+  return manifest;
 }

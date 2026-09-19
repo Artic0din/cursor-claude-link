@@ -9,8 +9,8 @@ Companion project: [cursor-gpt-link](https://github.com/Artic0din/cursor-gpt-lin
 | Item | Current status |
 | --- | --- |
 | Client platform | macOS 26+ (Apple Silicon, arm64) |
-| Verified macOS Cursor | 3.20.17, September 15, 2026 |
-| Cursor commit | `0c32194e3fb5ffaced9fb36430b860ec301e1fc0` |
+| Supported Cursor | 3.21.12 (darwin/arm64 hashes not yet captured) |
+| Cursor commit | `05ddb9e824590e2c1db6bd2548dd71bf67ac9d20` |
 | Node.js used locally | 25.2.1 |
 | Claude Code used locally | 2.1.270, signed in with Claude Max |
 | macOS signing | Hardened runtime, entitlements and native loading checked |
@@ -20,15 +20,15 @@ Companion project: [cursor-gpt-link](https://github.com/Artic0din/cursor-gpt-lin
 | Subscription usage | Settings card implemented; retrieval can be unavailable |
 | Fast and Ultracode | Not implemented |
 
-Only Cursor 3.20.17 has verified macOS arm64 hashes in this release.
+This fork targets Cursor **3.21.12** only. Installation stays rejected until `scripts/capture-hashes.mjs` records darwin/arm64 hashes from an original Mac app. Older Cursor versions are not supported.
 Use a local workspace with the **This Mac** environment; cloud agents cannot reach these local bridges and are unsupported.
-The retained older and 3.20.21 metadata describes historical Windows builds and is rejected on macOS.
-See [testing notes](docs/testing.md) for current macOS results and separately labelled upstream history.
+The retained Windows `build-3.21.12.json` is historical upstream metadata and is rejected on macOS.
+See [testing notes](docs/testing.md).
 
-Only the listed builds are supported. The installer checks version, commit, original JavaScript hashes and patch anchors. A matching local ChatGPT installation manifest can identify already patched files. Unknown changes stop installation.
+The installer checks version, commit, original JavaScript hashes and patch anchors. A matching local ChatGPT installation manifest can identify already patched files. Unknown changes stop installation.
 
-On Cursor 3.20.17, local subscription subagents also receive a missing parent Task entry before Cursor waits for its registration.
-The repair passed automated checks in both workbenches; a completed SSH subagent task still needs manual confirmation.
+The 3.21.12 pipeline forwards **Explore Subagent Model** selections, matches native model tooltips, connects context and MAX selection to the runtime budget, cancels active subagents with the parent chat, refreshes subagent transcripts, and forwards queued follow-ups when starting Build. See [Context and MAX mode](docs/model-modes.md).
+
 
 ## What it adds
 
@@ -160,7 +160,7 @@ In particular, [Fable can use usage credits on some plans](https://code.claude.c
 
 ## Reconnecting or failed requests
 
-Claude CLI errors now use the error event understood by Cursor's Responses adapter. Earlier bridge versions sent `response.failed`, which Cursor 3.20.11 ignored and treated as an interrupted stream. This could hide login, usage-limit or timeout errors behind repeated reconnect attempts. The correction reports the original error; it does not resolve an expired login, exhausted usage or a broken SSH connection.
+Claude CLI errors now use the error event understood by Cursor's Responses adapter. Earlier bridge versions sent `response.failed`, which Cursor ignored and treated as an interrupted stream. This could hide login, usage-limit or timeout errors behind repeated reconnect attempts. The correction reports the original error; it does not resolve an expired login, exhausted usage or a broken SSH connection.
 
 Model discovery now closes the Claude CLI input stream and waits for a clean exit before returning the catalog, so it no longer kills a successful discovery process during cleanup. If Claude reports a missing sign-in, run `claude auth login --claudeai` locally, then retry the request.
 
@@ -188,6 +188,8 @@ npm run check:source
 ```
 
 Unit tests use synthetic data and do not make model requests. The optional `npm run test:live` requires the running bridge and consumes subscription usage. It checks a tool call and its result. Set `CLAUDE_TEST_MODEL` to a catalog value to select a different model.
+
+For a new supported Mac build, run `node scripts/capture-hashes.mjs` with its original `Contents/Resources/app` path, review the printed `darwin`/`arm64` object, and replace `build-3.21.12.json` with it before `npm run check:source` or install. Leaving the Windows metadata in place keeps installation fail-closed. Capture rejects incomplete apps, invalid signatures and executables without arm64 support.
 
 No Cursor binaries, full bundled source, model caches or account files are distributed. When reporting a problem, include the Cursor version and commit, operating system, Node.js and Claude Code versions, and a redacted error. See [SECURITY.md](SECURITY.md) for sensitive reports.
 

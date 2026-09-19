@@ -79,3 +79,14 @@ test('stalled model discovery remains bounded',async()=>{
 test('logged-out CLI status provides the subscription login command',async()=>{
   await assert.rejects(runCli(process.execPath,['-e','console.log(JSON.stringify({loggedIn:false,authMethod:"none"}));process.exitCode=1;']),/claude auth login --claudeai/);
 });
+test('live picker-models advertises MAX for extended models',async t=>{
+  const catalog=sanitizeModels([{value:'opus',displayName:'Opus',resolvedModel:'claude-opus-5[1m]',description:'Opus 5 with 1M context'}]);
+  const server=http.createServer(createHandler({config,getCatalog:async()=>catalog,inferRequest:async()=>({answer:{text:'',tool_calls:[]}})}));
+  server.listen(0,'127.0.0.1');await once(server,'listening');
+  t.after(()=>new Promise(resolve=>{server.closeAllConnections();server.close(resolve);}));
+  const base='http://127.0.0.1:'+server.address().port;
+  const listed=(await (await fetch(base+'/picker-models',{headers})).json()).models[0];
+  assert.equal(listed.supportsMaxMode,true);
+  assert.equal(listed.contextTokenLimit,200000);
+  assert.equal(listed.contextTokenLimitForMaxMode,1000000);
+});
