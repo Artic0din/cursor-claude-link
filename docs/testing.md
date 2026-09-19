@@ -2,13 +2,9 @@
 
 ## Verified macOS build
 
-The September 15, 2026 checks used macOS 27.0 on Apple Silicon, Node.js 25.2.1 and Cursor 3.20.17.
-The exact Cursor commit is `0c32194e3fb5ffaced9fb36430b860ec301e1fc0`.
-The minimum supported OS is macOS 26; live application checks were performed on macOS 27.
-Claude Code 2.1.270 was signed into a Claude subscription.
-
-[The 3.20.17 metadata](../build-3.20.17.json) records six hashes captured from the original, signature-verified Mac application.
-Older metadata and the 3.20.21–3.21.12 metadata describe Windows bundles and are rejected on macOS until `scripts/capture-hashes.mjs` records a matching Mac app.
+This fork targets Cursor 3.21.12 only. The 3.21.12 metadata is still the upstream Windows bundle and is rejected on macOS until `scripts/capture-hashes.mjs` records darwin/arm64 hashes from an original Mac app.
+The exact Cursor commit is `05ddb9e824590e2c1db6bd2548dd71bf67ac9d20`.
+The minimum supported OS is macOS 26.
 A matching version label alone is insufficient to establish compatibility.
 
 ## Current checks
@@ -83,7 +79,7 @@ Fast and Ultracode are not implemented.
 
 The workbench now includes the explicitly selected Explore model in the local runtime catalog. Previously a selection missing from `localProviderAgentModelIds` silently became Inherit. The patch also carries the selected model parameters into the client subagent request and preserves parent parameters for inherited models. Default, Inherit and Disabled continue through Cursor's native resolver.
 
-Unit tests reproduce the missing-catalog fallback. Upstream checked this against Windows Cursor 3.20.21; this fork keeps those workbench and runtime patches and still rejects unverified Windows hashes on macOS. Tooltip tests cover every effort and context variant using the native Markdown layout. Upstream also recorded an Explore model, effort and tooltip confirmation after reload; that check is not a macOS, IDE or SSH matrix. A live SSH Explore run with a different selected model still needs manual confirmation.
+Unit tests reproduce the missing-catalog fallback. This fork keeps the 3.21.12 workbench and runtime patches and still rejects unverified Windows hashes on macOS. Tooltip tests cover every effort and context variant using the native Markdown layout. A live SSH Explore run with a different selected model still needs manual confirmation.
 
 ### Context and MAX mode
 

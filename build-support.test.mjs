@@ -22,10 +22,8 @@ test('default companion discovery uses the macOS application-support directory',
 test('historical Windows manifests cannot be mistaken for verified Mac builds', t => {
   const root=fs.mkdtempSync(path.join(os.tmpdir(),'claude-build-test-'));
   t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
-  for(const version of ['3.20.7','3.20.11','3.20.21','3.20.23','3.21.1','3.21.9','3.21.12']){
-    fs.writeFileSync(path.join(root,'package.json'),JSON.stringify({version}));
-    assert.throws(()=>getBuild(root),/no verified macOS arm64 metadata/);
-  }
+  fs.writeFileSync(path.join(root,'package.json'),JSON.stringify({version:'3.21.12'}));
+  assert.throws(()=>getBuild(root),/no verified macOS arm64 metadata/);
 });
 
 test('unknown Cursor versions remain unsupported', t => {
@@ -42,7 +40,7 @@ test('combined installation cannot pass the preflight that archives stale Claude
   t.after(()=>{if(previous===undefined)delete process.env.CURSOR_GPT_LINK_HOME;else process.env.CURSOR_GPT_LINK_HOME=previous;fs.rmSync(dir,{recursive:true,force:true});});
   process.env.CURSOR_GPT_LINK_HOME=state;
   fs.mkdirSync(root,{recursive:true});fs.mkdirSync(state);
-  const build=JSON.parse(fs.readFileSync(new URL('./build-3.20.17.json',import.meta.url),'utf8'));
+  const build=JSON.parse(fs.readFileSync(new URL('./build-3.21.12.json',import.meta.url),'utf8'));
   fs.writeFileSync(path.join(root,'package.json'),JSON.stringify({version:build.version}));
   const files=Object.entries(build.files).map(([relative,originalHash])=>{
     const file=path.join(root,relative);
@@ -57,17 +55,15 @@ test('combined installation cannot pass the preflight that archives stale Claude
   assert.equal(requireSupportedOriginals(root).version,build.version);
 });
 
-test('version installers leave installed.json for the macOS restore wrapper', () => {
+test('the shared installer leaves installed.json for the macOS restore wrapper', () => {
   const dir=path.dirname(fileURLToPath(import.meta.url));
-  for(const name of fs.readdirSync(dir).filter(file=>/^install-3\./.test(file))){
-    const source=fs.readFileSync(path.join(dir,name),'utf8');
-    assert.equal(source.includes("manifestPath+'.restored-'"),false,name);
-    assert.equal(source.includes('unlinkSync(manifestPath)'),false,name);
-    assert.match(source,/restoreInstalledFiles\(JSON\.parse\(fs\.readFileSync\(manifestPath/,name);
-    assert.match(source,/appMode:requireWritableApp\(root\)/,name);
-    assert.match(source,/setAppMode\(root,0o700\)/,name);
-    assert.match(source,/pending\.some\(x=>x\.path===f\.path\)/,name);
-  }
+  const source=fs.readFileSync(path.join(dir,'install-workbench.mjs'),'utf8');
+  assert.equal(source.includes("manifestPath+'.restored-'"),false);
+  assert.equal(source.includes('unlinkSync(manifestPath)'),false);
+  assert.match(source,/restoreInstalledFiles\(JSON\.parse\(fs\.readFileSync\(manifestPath/);
+  assert.match(source,/appMode:\s*requireWritableApp\(root\)/);
+  assert.match(source,/setAppMode\(root,\s*0o700\)/);
+  assert.match(source,/pending\.some\(x\s*=>\s*x\.path\s*===\s*f\.path\)/);
 });
 
 function restoreFixture(t) {
@@ -105,6 +101,11 @@ test('restore writes linked GPT originals and continues if that checkout is gone
   assert.equal(fs.readFileSync(gpt,'utf8'),original);
   assert.equal(fs.readFileSync(files[0].path,'utf8'),'original 0');
   restoreInstalledFiles({files,linked:[{path:path.join(dir,'missing-gpt','installed.json'),original}]});
+  const leftover=path.join(dir,'gpt-state');
+  fs.mkdirSync(leftover);
+  const archived=path.join(leftover,'installed.json');
+  restoreInstalledFiles({files,linked:[{path:archived,original}]});
+  assert.equal(fs.existsSync(archived),false);
 });
 
 test('restore rethrows non-ENOENT linked GPT write errors', t=>{

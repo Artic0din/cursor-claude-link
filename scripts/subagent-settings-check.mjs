@@ -2,6 +2,7 @@
 // bundled code is read from a local installation and is never redistributed.
 import assert from 'node:assert/strict';
 import {configureTaskProps,selectedParameters,selectedModelIds} from '../subagent-settings.mjs';
+import {CLAUDE_PREFIX} from '../subscription-prefix.mjs';
 export function verifySubagentSettings(source) {
  // 3.21.1 rotated the minified locals; the resolver call is what identifies it.
  const match=source.match(/function ([\w$]+)\(e\)\{const t=\(\)=>!1,([\w$]+)=([\w$]+)\(e\),([\w$]+)=null!=\2\?\2:e\.localProvider;/);
@@ -22,19 +23,19 @@ export function verifySubagentSettings(source) {
   const overrides=[{subagentType:'explore',selection:{case:'model',value:{modelId,parameters:selectedParams}}}];
   const base={modelId:parent,localProvider:{kind:'http',endpoints:[]},modelParameters:parentParams,subagentModelOverrides:overrides};
   assert.equal(native(base).subagentModelOverrides.explore.type,'inherit','Original missing-catalog failure reproduced');
-  const input={...base,availableModels:selectedModelIds([],overrides,parent).map(id=>({id}))};
-  const props=configureTaskProps(input,native(input));
+  const input={...base,availableModels:selectedModelIds([],overrides,parent,CLAUDE_PREFIX).map(id=>({id}))};
+  const props=configureTaskProps(input,native(input),CLAUDE_PREFIX);
   assert.deepEqual(props.subagentModelOverrides.explore,{type:'model',modelId});
   assert.deepEqual(props.parentModelParameters,parentParams);
-  assert.deepEqual(selectedParameters(props,{subagent_type:{type:{case:'explore'}},userRequestedModelId:modelId},modelId),selectedParams);
+  assert.deepEqual(selectedParameters(props,{subagent_type:{type:{case:'explore'}},userRequestedModelId:modelId},modelId,undefined,CLAUDE_PREFIX),selectedParams);
  }
  for(const mode of ['default','inherit','disabled']){
   const input={modelId:parent,localProvider:{kind:'http'},subagentModelOverrides:mode==='default'?[]:[{subagentType:'explore',selection:{case:mode,value:true}}]};
-  const original=native(input),patched=configureTaskProps(input,original);
+  const original=native(input),patched=configureTaskProps(input,original,CLAUDE_PREFIX);
   assert.deepEqual(patched.subagentModelOverrides,original.subagentModelOverrides);
   assert.equal(patched.subagentModelOverrides.explore.type,mode==='default'?'inherit':mode);
  }
  assert.match(source,/modelId:([\w$]+)\.modelDetails\.modelId,modelParameters:\1\.parameters,modelInfo:[\w$]+/);
- assert.ok(source.includes('resolvedModelParameters:__')&&source.includes('SelectedParameters(a,'),'Parameters forwarded into client subagent resolution');
+ assert.ok(source.includes('resolvedModelParameters:__subscriptionSelectedParameters(a,'),'Parameters forwarded into client subagent resolution');
  console.log('Native Explore settings: missing catalog reproduced; model, Default, Inherit, Disabled and parameters passed.');
 }

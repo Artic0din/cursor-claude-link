@@ -14,9 +14,9 @@ export async function verifySubagentLifecycle(source, prefixes) {
   methods[0]=method(source.includes('cancelChat(e){const t=this.composerDataService')?'cancelChat(e){const t=this.composerDataService':'cancelChat(t){const e=this.composerDataService','async cancelCurrentStep(');
   assert.match(source,/if\(subscriptionComposer\(this.composerDataService,[\w$]+,__subscriptionSubagentPrefixes\)\)this.instantiationService.invokeFunction\(s=>s.get\([\w$]+\)\).cancelSubagentTree/,
     'Descendants are cancelled from the native stop path');
-  // Every build and surface minifies the helpers these methods reach for under
-  // different names (tr/cs on 3.20.21–3.20.23, Xi/Kr on 3.21.1, Xi/Qr on 3.21.9,
-  // Xi/Jr on 3.21.12). Resolve them through one stub: reactive readers are called
+  // Desktop and glass minify the helpers these methods reach for under
+  // different names (Xi / Jr on 3.21.12). Resolve them through one stub:
+  // reactive readers are called
   // with a thunk and must return its value, predicates must stay falsy so the
   // local path is exercised, and service identities are never dereferenced.
   const scope=new Proxy({subscriptionComposer,__subscriptionSubagentPrefixes:prefixes},{

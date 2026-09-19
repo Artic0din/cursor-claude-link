@@ -80,7 +80,7 @@ test('repeated completed children do not accumulate parent abort listeners',asyn
 });
 function lifecycleFixture(untrack) {
   return [
-    'cancelChat(e){const t=this.composerDataService;if(subscriptionComposer(this.composerDataService,e,__subscriptionSubagentPrefixes))this.instantiationService.invokeFunction(s=>s.get(hZe)).cancelSubagentTree(e);}',
+    'cancelChat(e){const t=this.composerDataService;if(subscriptionComposer(this.composerDataService,e,__subscriptionSubagentPrefixes))this.instantiationService.invokeFunction(s=>s.get(pZe)).cancelSubagentTree(e);}',
     'async cancelCurrentStep(){}',
     'async stopSubagentTree(e){if(subscriptionComposer(this._composerDataService,e,__subscriptionSubagentPrefixes)){this.cancelSubagentTree(e);return;}}',
     'async _loadSubagentTreeForStop(){}',
@@ -88,11 +88,12 @@ function lifecycleFixture(untrack) {
     'getBubbleLoadState(){}'
   ].join('\n');
 }
-for (const untrack of ['tr','cs','Xi','Kr','Qr','Jr']) {
-  test('native lifecycle check binds rotated classifyBubble untrack '+untrack, async () => {
+for (const untrack of ['Xi','Jr']) {
+  test('native lifecycle check binds 3.21.12 classifyBubble untrack '+untrack, async () => {
     await verifySubagentLifecycle(lifecycleFixture(untrack), ['claude-subscription/']);
   });
 }
 test('unknown lifecycle versions fail closed',()=>{
+  assert.throws(()=>patchSubagentLifecycle('source','desktop','claude-subscription/'),/version is required/);
   assert.throws(()=>patchSubagentLifecycle('source','desktop','claude-subscription/','3.99.0'),/Unsupported subagent lifecycle version/);
 });

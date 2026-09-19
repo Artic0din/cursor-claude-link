@@ -9,12 +9,12 @@ const claudeIcon=fs.readFileSync(new URL('./claude.svg',import.meta.url),'utf8')
 
 const effortName=value=>value==='xhigh'?'Very high':value[0].toUpperCase()+value.slice(1);
 const escape=value=>value.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
-export function pickerModels(catalog, {advertiseMaxMode=false}={}) {
+export function pickerModels(catalog) {
   return modelOptions(catalog).map(model=>{
     const id=prefix+model.value,name=model.displayName,efforts=model.supportedEffortLevels;
     const defaultEffort=efforts.includes('medium')?'medium':efforts[0];
     const contexts=model.extended?[200000,1000000]:[200000];
-    const advertiseMax=advertiseMaxMode&&model.extended;
+    const advertiseMax=!!model.extended;
     const tooltip=(context,effort)=>modelTooltip(name,model.summary,context,effort);
     return {name:id,serverModelName:id,clientDisplayName:name,inputboxShortModelName:name,
       defaultOn:true,supportsAgent:true,supportsImages:true,supportsThinking:efforts.length>0,

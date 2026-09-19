@@ -59,10 +59,11 @@ export async function verifyConversationActionsWorkbench(source,prefixes){
 }
 
 export function verifyConversationActionsRuntime(source){
-  assert.match(source,/subscriptionActionReceiver\(i,[\w$]+\.subscriptionActionChannel,bytes=>[\w$]+\([\w$]+\.QF.fromBinary\(bytes\),_\),new [\w$]+\)/);
+  assert.match(source,/subscriptionActionReceiver\(i,[\w$]+\.subscriptionActionChannel,bytes=>[\w$]+\([\w$]+\.QF\.fromBinary\(bytes\),[\w$]+\),new [\w$]+\)/);
   assert.match(source,/actionHandlers.get\("executePlanAction"\).__subscriptionPlanPrepends=[\w$]+\.subscriptionActionChannel\?/);
-  const insertion=source.indexOf('await prependSubscriptionPlanMessages(this.__subscriptionPlanPrepends,e,r,s,this.config,this.resourceAccessor,');
-  assert.ok(insertion>=0);
+  assert.match(source,/[\w$]+\.RG\.fromBinary\(Uint8Array\.from\(bytes\)\)/);
+  const insertion=source.search(/await prependSubscriptionPlanMessages\(this\.__subscriptionPlanPrepends,e,[\w$]+,[\w$]+,this\.config,this\.resourceAccessor,/);
+  assert.ok(insertion>=0,'Plan prepend insertion uses the derived state and requestContext locals');
   const kickoff=source.indexOf('t.kickoffMessageId??crypto.randomUUID()',insertion);
   const handle=source.indexOf('async handle(',insertion);
   assert.ok(kickoff>insertion&&kickoff<handle,'Unconfirmed human turns are recorded before native plan kickoff');

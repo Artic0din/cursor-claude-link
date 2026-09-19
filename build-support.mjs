@@ -4,6 +4,7 @@ import os from 'node:os';
 import crypto from 'node:crypto';
 import {execFileSync} from 'node:child_process';
 import {assertSupportedMac} from './macos.mjs';
+import {CURSOR_VERSION} from './install-anchors.mjs';
 
 export const sha256=value=>crypto.createHash('sha256').update(value).digest('hex');
 
@@ -19,7 +20,9 @@ export function restoreInstalledFiles(manifest) {
     if (sha256(fs.readFileSync(file.path))===file.patchedHash) fs.copyFileSync(file.backup,file.path);
   for (const linked of manifest.linked??[]) {
     try {
-      if (typeof linked?.path==='string'&&typeof linked?.original==='string') fs.writeFileSync(linked.path,linked.original);
+      if (typeof linked?.path!=='string'||typeof linked?.original!=='string') continue;
+      if (!fs.existsSync(linked.path)) continue;
+      fs.writeFileSync(linked.path,linked.original);
     } catch (error) {
       if (error?.code!=='ENOENT') throw error;
     }
@@ -55,9 +58,9 @@ export function linkedGptManifests() {
 }
 export function getBuild(root) {
   const version=JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8')).version;
-  if(!['3.20.7','3.20.11','3.20.17','3.20.21','3.20.23','3.21.1','3.21.9','3.21.12'].includes(version))throw new Error('Unsupported Cursor version: '+version);
+  if(version!==CURSOR_VERSION)throw new Error('Unsupported Cursor version: '+version);
   const build=JSON.parse(fs.readFileSync(new URL('./build-'+version+'.json',import.meta.url),'utf8'));
-  if(build.platform!=='darwin'||build.arch!=='arm64')throw new Error('Cursor '+version+' has no verified macOS arm64 metadata. Use Cursor 3.20.17, or capture hashes from an original Mac app.');
+  if(build.platform!=='darwin'||build.arch!=='arm64')throw new Error('Cursor '+version+' has no verified macOS arm64 metadata. Capture hashes from an original Mac app.');
   assertSupportedClient(build);
   if(JSON.parse(fs.readFileSync(path.join(root,'product.json'),'utf8')).commit!==build.commit)throw new Error('Unsupported Cursor commit.');
   return build;

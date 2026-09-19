@@ -24,7 +24,7 @@ return async function handle(req,res) {
     if (req.headers.authorization!=='Bearer '+config.key) return json(res,401,{error:{message:'Bridge authentication required'}});
     const pathname=new URL(req.url,'http://127.0.0.1').pathname;
     if (pathname==='/health') return json(res,200,{ok:true,provider:'claude-subscription',active});
-    if (pathname==='/picker-models') return json(res,200,{models:pickerModels(await getCatalog(),{advertiseMaxMode:config.advertiseMaxMode===true})});
+    if (pathname==='/picker-models') return json(res,200,{models:pickerModels(await getCatalog())});
     if (pathname==='/v1/models') return json(res,200,{object:'list',data:providerModels(await getCatalog())});
     if (pathname==='/account') return json(res,200,await readAccount(config.claude,{cwd:dir}));
     if (req.method==='GET'&&(pathname==='/usage'||pathname==='/v1/usage')) {
