@@ -19,16 +19,18 @@ export function verifySubagentSettings(source) {
  const native=new Function(...Object.keys(dependencies),'return ('+fn+')')(...Object.values(dependencies));
  const parent='claude-subscription/parent',child='claude-subscription/selected',parentParams=[{id:'reasoning',value:'low'}];
  const selectedParams=[{id:'reasoning',value:'xhigh'},{id:'context',value:'1000000'},{id:'fast',value:'true'}];
- for(const modelId of [child,'another-provider/model']){
-  const overrides=[{subagentType:'explore',selection:{case:'model',value:{modelId,parameters:selectedParams}}}];
-  const base={modelId:parent,localProvider:{kind:'http',endpoints:[]},modelParameters:parentParams,subagentModelOverrides:overrides};
-  assert.equal(native(base).subagentModelOverrides.explore.type,'inherit','Original missing-catalog failure reproduced');
-  const input={...base,availableModels:selectedModelIds([],overrides,parent,CLAUDE_PREFIX).map(id=>({id}))};
-  const props=configureTaskProps(input,native(input),CLAUDE_PREFIX);
-  assert.deepEqual(props.subagentModelOverrides.explore,{type:'model',modelId});
-  assert.deepEqual(props.parentModelParameters,parentParams);
-  assert.deepEqual(selectedParameters(props,{subagent_type:{type:{case:'explore'}},userRequestedModelId:modelId},modelId,undefined,CLAUDE_PREFIX),selectedParams);
- }
+ const overrides=[{subagentType:'explore',selection:{case:'model',value:{modelId:child,parameters:selectedParams}}}];
+ const base={modelId:parent,localProvider:{kind:'http',endpoints:[]},modelParameters:parentParams,subagentModelOverrides:overrides};
+ assert.equal(native(base).subagentModelOverrides.explore.type,'inherit','Original missing-catalog failure reproduced');
+ const input={...base,availableModels:selectedModelIds([],overrides,parent,CLAUDE_PREFIX).map(id=>({id}))};
+ const props=configureTaskProps(input,native(input),CLAUDE_PREFIX);
+ assert.deepEqual(props.subagentModelOverrides.explore,{type:'model',modelId:child});
+ assert.deepEqual(props.parentModelParameters,parentParams);
+ assert.deepEqual(selectedParameters(props,{subagent_type:{type:{case:'explore'}},userRequestedModelId:child},child,undefined,CLAUDE_PREFIX),selectedParams);
+ const foreign=[{subagentType:'explore',selection:{case:'model',value:{modelId:'another-provider/model',parameters:selectedParams}}}];
+ assert.deepEqual(selectedModelIds([],foreign,parent,CLAUDE_PREFIX),[]);
+ const foreignInput={...base,subagentModelOverrides:foreign,availableModels:selectedModelIds([],foreign,parent,CLAUDE_PREFIX).map(id=>({id}))};
+ assert.equal(native(foreignInput).subagentModelOverrides.explore.type,'inherit');
  for(const mode of ['default','inherit','disabled']){
   const input={modelId:parent,localProvider:{kind:'http'},subagentModelOverrides:mode==='default'?[]:[{subagentType:'explore',selection:{case:mode,value:true}}]};
   const original=native(input),patched=configureTaskProps(input,original,CLAUDE_PREFIX);

@@ -77,7 +77,7 @@ Fast and Ultracode are not implemented.
 
 ### Explore model settings
 
-The workbench now includes the explicitly selected Explore model in the local runtime catalog. Previously a selection missing from `localProviderAgentModelIds` silently became Inherit. The patch also carries the selected model parameters into the client subagent request and preserves parent parameters for inherited models. Default, Inherit and Disabled continue through Cursor's native resolver.
+The workbench now includes the explicitly selected Explore model in the local runtime catalog when that ID starts with `claude-subscription/`. Foreign Explore IDs stay out of this provider's catalog so the runtime does not send them through the Claude bridge. Previously a same-prefix selection missing from `localProviderAgentModelIds` silently became Inherit. The patch also carries the selected model parameters into the client subagent request and preserves parent parameters for inherited models. Default, Inherit and Disabled continue through Cursor's native resolver.
 
 Unit tests reproduce the missing-catalog fallback. This fork keeps the 3.21.12 workbench and runtime patches and still rejects unverified Windows hashes on macOS. Tooltip tests cover every effort and context variant using the native Markdown layout. A live SSH Explore run with a different selected model still needs manual confirmation.
 

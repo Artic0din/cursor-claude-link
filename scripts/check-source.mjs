@@ -27,6 +27,8 @@ const wrapper=fs.readFileSync(new URL('install.mjs',root),'utf8');
 if(wrapper.includes('getBuild('))throw new Error('install.mjs must not call getBuild; restore reads the existing manifest and install goes through requireSupportedOriginals');
 if(!wrapper.includes('readExistingManifest(root,manifestPath)')&&!wrapper.includes('readExistingManifest(root, manifestPath)'))throw new Error('install.mjs must read the existing manifest before restoring');
 if(!wrapper.includes('restoreInstalledFiles(manifest)'))throw new Error('install.mjs must restore leftover installs from the existing manifest');
+const settings=fs.readFileSync(new URL('subagent-settings.mjs',root),'utf8');
+if(!settings.includes('id.startsWith(prefix)'))throw new Error('selectedModelIds must keep foreign Explore IDs out of this provider catalog');
 const bubbles=fs.readFileSync(new URL('subagent-bubbles.mjs',root),'utf8');
 if(!bubbles.includes('var CLAUDE_PREFIX=')||!bubbles.includes('JSON.stringify(CLAUDE_PREFIX)'))throw new Error('patchSubagentBubbles must emit CLAUDE_PREFIX into the workbench bundle');
 console.log('Source syntax and supported build metadata passed.');

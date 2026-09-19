@@ -189,7 +189,7 @@ npm run check:source
 
 Unit tests use synthetic data and do not make model requests. The optional `npm run test:live` requires the running bridge and consumes subscription usage. It checks a tool call and its result. Set `CLAUDE_TEST_MODEL` to a catalog value to select a different model.
 
-For a new supported Mac build, run `node scripts/capture-hashes.mjs` with its original `Contents/Resources/app` path, review and copy the complete output into the matching `build-*.json`, then re-run source checks. Capture rejects incomplete apps, invalid signatures and executables without arm64 support.
+For a new supported Mac build, run `node scripts/capture-hashes.mjs` with its original `Contents/Resources/app` path, review the printed `darwin`/`arm64` object, and replace `build-3.21.12.json` with it before `npm run check:source` or install. Leaving the Windows metadata in place keeps installation fail-closed. Capture rejects incomplete apps, invalid signatures and executables without arm64 support.
 
 No Cursor binaries, full bundled source, model caches or account files are distributed. When reporting a problem, include the Cursor version and commit, operating system, Node.js and Claude Code versions, and a redacted error. See [SECURITY.md](SECURITY.md) for sensitive reports.
 

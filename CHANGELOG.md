@@ -7,6 +7,7 @@ The format follows Keep a Changelog.
 
 ### Fixed
 
+- `selectedModelIds` now keeps only Explore IDs that start with this provider prefix, so a foreign selection is not added to the Claude catalog.
 - Serialized Explore and Task-bubble helpers no longer close over Node imports (`requireSubscriptionPrefix`, `CLAUDE_PREFIX`). Patchers still validate the prefix; bubbles emit `CLAUDE_PREFIX` into the workbench bundle.
 - `--restore` reads the existing `installed.json` first and no longer requires `getBuild()` to succeed, so a leftover 3.20.17 patch can be uninstalled after this checkout became 3.21.12-only. 3.20.17 is not an install target; new installs still fail closed until darwin/arm64 hashes exist.
 - Combined-install GPT overlay is tested without requiring verified 3.21.12 hashes, so CI `test (22)` / `test (24)` can pass while metadata is still Windows.

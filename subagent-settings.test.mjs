@@ -10,7 +10,7 @@ const selection={subagentType:'explore',selection:{case:'model',value:{modelId:c
 test('Explore model selection is available locally without changing Default, Inherit or Disabled',()=>{
  const original=['native'];
  assert.deepEqual(selectedModelIds(original,[selection],parent,CLAUDE_PREFIX),['native',child]);
- assert.deepEqual(selectedModelIds(original,[{...selection,selection:{case:'model',value:{modelId:'another-provider/model'}}}],parent,CLAUDE_PREFIX),['native','another-provider/model']);
+ assert.deepEqual(selectedModelIds(original,[{...selection,selection:{case:'model',value:{modelId:'another-provider/model'}}}],parent,CLAUDE_PREFIX),original);
  for(const mode of ['default','inherit','disabled'])assert.deepEqual(selectedModelIds(original,[{selection:{case:mode}}],parent,CLAUDE_PREFIX),original);
  assert.strictEqual(selectedModelIds(original,[selection],'ordinary',CLAUDE_PREFIX),original);
  assert.deepEqual(original,['native']);
@@ -46,6 +46,7 @@ test('serialized Explore helpers do not close over Node imports',()=>{
  assert.equal(patched.includes('requireSubscriptionPrefix'),false);
  const injected=new Function(patched.slice(patched.indexOf('function __subscriptionSelectedModelIds'))+';return __subscriptionSelectedModelIds')();
  assert.deepEqual(injected(['native'],[selection],parent,CLAUDE_PREFIX),['native',child]);
+ assert.deepEqual(injected(['native'],[{...selection,selection:{case:'model',value:{modelId:'another-provider/model'}}}],parent,CLAUDE_PREFIX),['native']);
 });
 test('model tooltip matches Cursor title, context and italic effort layout',()=>{
  assert.equal(modelTooltip('Model','Description',256000,'high').markdownContent,'**Model**  \nDescription\n\n256k context window\n\n*Version: high effort*');
