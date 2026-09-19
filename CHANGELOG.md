@@ -7,6 +7,7 @@ The format follows Keep a Changelog.
 
 ### Fixed
 
+- Kept Claude and ChatGPT subscription models on This Mac's local runtime when the Agents Window target is This Mac (Remote Control), instead of sending those IDs through Cursor's cloud create RPC. Cloud and Remote Machine targets are unchanged.
 - Combined GPT-first install now records `claudeManifest` on the linked GPT manifest, uses a Claude-specific task-props native wrapper so GPT's wrapper stays callable, and skips the 0444 permission assertion when tests run as root.
 - `selectedModelIds` now keeps only Explore IDs that start with this provider prefix, so a foreign selection is not added to the Claude catalog.
 - Serialized Explore and Task-bubble helpers no longer close over Node imports (`requireSubscriptionPrefix`, `CLAUDE_PREFIX`). Patchers still validate the prefix; bubbles emit `CLAUDE_PREFIX` into the workbench bundle.

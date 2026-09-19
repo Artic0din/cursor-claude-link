@@ -16,7 +16,7 @@ The repeated-install check also passed against the real combined app, leaving bo
 Both links installed directly in `/Applications/Cursor.app`, GPT first and Claude second, with an existing Apple signing identity.
 Strict signature verification, Electron native loading and both installation manifests passed after combined installation.
 Both bridge workers started automatically with Cursor and appeared in the native model picker.
-Cloud agents are unsupported: use a local workspace and the This Mac environment.
+Cloud agents and Remote Machine remain unsupported. This Mac (Remote Control) keeps subscription models on the same local runtime as This Mac.
 
 A native Claude file-edit request reproduced a collision between Cursor tool names and disabled Claude Code built-ins.
 After assigning distinct transport names, replaying that captured request returned the expected Cursor `Write` call.

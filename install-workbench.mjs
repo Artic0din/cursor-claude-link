@@ -6,6 +6,7 @@ import {patchSubagentModel} from './subagent-model.mjs';
 import {patchSubagentBubbles} from './subagent-bubbles.mjs';
 import {CURSOR_VERSION, SUBSCRIPTION_PREFIX, workbenchEntry} from './install-anchors.mjs';
 import {once, patchLocalBridgeMode, patchRuntimeReasoning} from './patch-runtime.mjs';
+import {patchRemoteControlRouting} from './remote-control.mjs';
 import {cursorRoot, linkedGptManifests, requireSupportedOriginals, restoreInstalledFiles, sha256} from './build-support.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -90,6 +91,7 @@ function patchWorkbenchSurface(source, surfaceName, anchors, features, prefix, v
   source = patchLocalBridgeMode(source, surface);
   source = once(source, surface.native, '(__isClaudeBridgeModel(' + surface.nativeModel + ')&&Boolean(this.environmentService.remoteAuthority)||' + surface.native + ')');
   if (source.includes(surface.activation)) source = once(source, surface.activation, surface.activation.replace('return ', 'return typeof __claudeBridgeBase==="string"||'));
+  source = patchRemoteControlRouting(source, surfaceName);
   source = once(source, surface.usage.fn, usageSectionSrc(surface.usage) + surface.usage.fn);
   const usageChildren = source.includes(surface.usage.childrenGpt) ? surface.usage.childrenGpt : surface.usage.children;
   source = once(source, usageChildren, usageChildren.slice(0, -1) + ',' + surface.usage.jsx + '(__claudeUsageSection,{})]');

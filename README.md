@@ -126,6 +126,14 @@ For a normal project update, close Cursor, restore the patch, run `git pull`, th
 
 Cursor updates can replace the patched files. **Do not restore old backups over a newer Cursor build.** Check the supported version table and follow [the update notes](docs/testing.md#cursor-updates). There is no force option.
 
+## This Mac (Remote Control)
+
+Remote Control still runs on this computer, but Cursor creates those agents through the cloud agent RPC.
+That RPC rejects `claude-subscription/` model IDs (`BAD_MODEL_NAME`).
+The patch keeps subscription models on the same local repository path as **This Mac**, so the existing local bridge serves them.
+Cursor-native models on Remote Control are unchanged.
+Cloud and Remote Machine remain unsupported.
+
 ## Remote SSH
 
 Inference runs on the local Mac through Cursor's dedicated local runtime. Cursor's existing workspace path handles tools on the SSH host. The remote machine should not need Claude Code, copied credentials or a forwarded bridge port.
@@ -156,7 +164,7 @@ In particular, [Fable can use usage credits on some plans](https://code.claude.c
 - Ultracode is not an effort level above Max. It combines xhigh reasoning with Claude Code's dynamic workflow orchestration. That orchestration is not implemented in this Cursor adapter, so no misleading Ultracode option is shown. See [Claude's model configuration](https://code.claude.com/docs/en/model-config#adjust-effort-level).
 - Initial model entries are embedded during installation. A failed catalog refresh can leave stale entries visible; the provider still decides whether a request is accepted.
 - Claude Code authentication, catalog and usage behavior can change separately from Cursor. A refresh-lock error can require retrying later or signing in again through Claude Code.
-- Cloud agents, Windows and Linux clients are unsupported. Only macOS 26+ on Apple Silicon is supported. Separate manual coverage of both Cursor windows and SSH is still needed.
+- Cloud agents and Remote Machine remain unsupported. This Mac and This Mac (Remote Control) use the local bridge. Only macOS 26+ on Apple Silicon is supported. Separate manual coverage of both Cursor windows and SSH is still needed.
 
 ## Reconnecting or failed requests
 
