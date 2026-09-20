@@ -1,4 +1,5 @@
-import {maxModeVariant} from './max-mode.mjs';
+import {maxModeVariant,patchMaxMode} from './max-mode.mjs';
+import {execFileSync} from 'node:child_process';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {subscriptionEnvironment, contextEnvironment, prepareRequest as prepare} from './runner.mjs';
@@ -13,6 +14,21 @@ const catalog=sanitizeModels([
  {value:'fable',displayName:'Fable',supportsEffort:true,supportedEffortLevels:['high','max']},
  {value:'haiku',displayName:'Haiku'}]);
 const prepareRequest=body=>prepare(body,catalog);
+
+test('Claude MAX composes with the GPT helper as an ES module and preserves both providers',()=>{
+ const native='function solve(m,p,x){if(m.variants.length===0||!x&&m.supportsNonMaxMode===!1)return;if(m.name?.startsWith("chatgpt-codex/")){const v=__subscriptionMaxModeVariant(m,p,x);if(v)return{model:m,variant:v,parameters:v.parameterValues}}return "native";}';
+ const gpt=native+'\n'+maxModeVariant.toString().replace('function maxModeVariant','function __subscriptionMaxModeVariant');
+ const patched=patchMaxMode(gpt,'claude-subscription/');
+ execFileSync(process.execPath,['--check','--input-type=module'],{input:patched,stdio:'pipe'});
+ const solve=new Function(patched+';return solve;')();
+ const variants=[false,true].map(isMaxMode=>({isMaxMode,parameterValues:[{id:'reasoning',value:'high'},{id:'context',value:isMaxMode?'1000000':'200000'}]}));
+ for(const prefix of ['chatgpt-codex/','claude-subscription/'])for(const max of [false,true]){
+  const result=solve({name:prefix+'test',variants},variants[0].parameterValues,max);
+  assert.equal(result.variant.isMaxMode,max);
+  assert.equal(result.parameters.find(p=>p.id==='reasoning').value,'high');
+ }
+ assert.equal(solve({name:'ordinary',variants},[],false),'native');
+});
 
 test('subscription environment removes API keys and third-party provider overrides',()=>{
   const env=subscriptionEnvironment({PATH:'test',ANTHROPIC_API_KEY:'not-a-real-key',ANTHROPIC_AUTH_TOKEN:'test',ANTHROPIC_BASE_URL:'test',CLAUDE_CODE_USE_BEDROCK:'1',CLAUDE_CODE_OAUTH_TOKEN:'test'});

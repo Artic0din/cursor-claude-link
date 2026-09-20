@@ -9,25 +9,34 @@ Companion project: [cursor-gpt-link](https://github.com/Artic0din/cursor-gpt-lin
 | Item | Current status |
 | --- | --- |
 | Client platform | macOS 26+ (Apple Silicon, arm64) |
-| Supported Cursor | 3.21.12 (darwin/arm64 hashes not yet captured) |
-| Cursor commit | `05ddb9e824590e2c1db6bd2548dd71bf67ac9d20` |
-| Node.js used locally | 25.2.1 |
-| Claude Code used locally | 2.1.270, signed in with Claude Max |
-| macOS signing | Hardened runtime, entitlements and native loading checked |
-| Context and effort | Forwarding checked in both runtime bundles; short requests tested with 200K and 1M |
-| IDE and Agents Window | Both bundles patched and syntax checked; separate manual coverage is not recorded |
+| Supported Cursor | 3.21.13 (verified original darwin/arm64 hashes) |
+| Cursor commit | `e44a49c17e334d442e58bbde931d791200f014a0` |
+| Node.js used for current validation | 26.8.2 |
+| Claude Code used for current live validation | 2.1.276, using an existing subscription sign-in |
+| macOS signing | Combined 3.21.13 installation, signatures, native loading and manifests verified |
+| Context and effort | Native Sonnet 5 Medium 1M smoke test passed; large-context workloads remain unverified |
+| IDE | Native Claude file write, readback and final response passed on 3.21.13 |
+| Agents Window | Patch candidates and synthetic native checks passed; live validation pending |
+| Agent Host compatibility | Shared runtime supported; independent runtime temporarily unsupported |
 | Remote SSH | Local inference routing implemented; dedicated Claude SSH testing is still pending |
 | Subscription usage | Settings card implemented; retrieval can be unavailable |
 | Fast and Ultracode | Not implemented |
 
-This fork targets Cursor **3.21.12** only. Installation stays rejected until `scripts/capture-hashes.mjs` records darwin/arm64 hashes from an original Mac app. Older Cursor versions are not supported.
+This fork targets Cursor **3.21.13** only.
+Original Mac file hashes were captured from the signed Apple Silicon app and the patch candidates passed syntax and native behavior checks.
+Older Cursor versions are not installation targets.
 Use a local workspace with the **This Mac** environment; cloud agents cannot reach these local bridges and are unsupported.
-The retained Windows `build-3.21.12.json` is historical upstream metadata and is rejected on macOS.
+The build metadata is specific to macOS; Windows and Linux clients are rejected.
 See [testing notes](docs/testing.md).
 
 The installer checks version, commit, original JavaScript hashes and patch anchors. A matching local ChatGPT installation manifest can identify already patched files. Unknown changes stop installation.
 
-The 3.21.12 pipeline forwards **Explore Subagent Model** selections, matches native model tooltips, connects context and MAX selection to the runtime budget, cancels active subagents with the parent chat, refreshes subagent transcripts, and forwards queued follow-ups when starting Build. See [Context and MAX mode](docs/model-modes.md).
+The pipeline forwards **Explore Subagent Model** selections, matches native model tooltips, connects context and MAX selection to the runtime budget, cancels active subagents with the parent chat, refreshes subagent transcripts, and forwards queued follow-ups when starting Build. See [Context and MAX mode](docs/model-modes.md).
+When Agent Host uses Cursor's shared workspace runtime, subscription turns use Cursor's existing local execution strategy for new turns, resume and summarization.
+Other models keep the original Agent Host strategy and its settings.
+The existing shared runtime registers its native workspace execution provider so subscription turns can use Cursor's file, shell and other workspace tools.
+Temporary compatibility limitation: subscription turns are unsupported when Agent Host enables either `cursor_agent_host_move_exec` or `agent_host_local_loop`.
+Those turns report an immediate compatibility error; the patch does not change Cursor's gates or initialize a second workspace runtime.
 
 
 ## What it adds
@@ -156,7 +165,7 @@ In particular, [Fable can use usage credits on some plans](https://code.claude.c
 - Ultracode is not an effort level above Max. It combines xhigh reasoning with Claude Code's dynamic workflow orchestration. That orchestration is not implemented in this Cursor adapter, so no misleading Ultracode option is shown. See [Claude's model configuration](https://code.claude.com/docs/en/model-config#adjust-effort-level).
 - Initial model entries are embedded during installation. A failed catalog refresh can leave stale entries visible; the provider still decides whether a request is accepted.
 - Claude Code authentication, catalog and usage behavior can change separately from Cursor. A refresh-lock error can require retrying later or signing in again through Claude Code.
-- Cloud agents, Windows and Linux clients are unsupported. Only macOS 26+ on Apple Silicon is supported. Separate manual coverage of both Cursor windows and SSH is still needed.
+- Cloud agents, Windows and Linux clients are unsupported. Only macOS 26+ on Apple Silicon is supported. Live Agents Window and Claude SSH coverage is still needed.
 
 ## Reconnecting or failed requests
 
@@ -189,7 +198,10 @@ npm run check:source
 
 Unit tests use synthetic data and do not make model requests. The optional `npm run test:live` requires the running bridge and consumes subscription usage. It checks a tool call and its result. Set `CLAUDE_TEST_MODEL` to a catalog value to select a different model.
 
-For a new supported Mac build, run `node scripts/capture-hashes.mjs` with its original `Contents/Resources/app` path, review the printed `darwin`/`arm64` object, and replace `build-3.21.12.json` with it before `npm run check:source` or install. Leaving the Windows metadata in place keeps installation fail-closed. Capture rejects incomplete apps, invalid signatures and executables without arm64 support.
+For a new Mac build, run `node scripts/capture-hashes.mjs` with its original `Contents/Resources/app` path and review the printed `darwin`/`arm64` object.
+Update the version-specific metadata and symbols together, then verify complete patch candidates and native behavior before installation.
+Capturing hashes alone does not establish compatibility.
+Capture rejects incomplete apps, invalid signatures and executables without arm64 support.
 
 No Cursor binaries, full bundled source, model caches or account files are distributed. When reporting a problem, include the Cursor version and commit, operating system, Node.js and Claude Code versions, and a redacted error. See [SECURITY.md](SECURITY.md) for sensitive reports.
 

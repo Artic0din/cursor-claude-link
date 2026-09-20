@@ -15,7 +15,7 @@ export async function verifySubagentLifecycle(source, prefixes) {
   assert.match(source,/if\(subscriptionComposer\(this.composerDataService,[\w$]+,__subscriptionSubagentPrefixes\)\)this.instantiationService.invokeFunction\(s=>s.get\([\w$]+\)\).cancelSubagentTree/,
     'Descendants are cancelled from the native stop path');
   // Desktop and glass minify the helpers these methods reach for under
-  // different names (Xi / Jr on 3.21.12). Resolve them through one stub:
+  // different names (Xi / Jr on 3.21.13). Resolve them through one stub:
   // reactive readers are called
   // with a thunk and must return its value, predicates must stay falsy so the
   // local path is exercised, and service identities are never dereferenced.
