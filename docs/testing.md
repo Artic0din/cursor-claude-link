@@ -11,7 +11,7 @@ A matching version label alone is insufficient to establish compatibility.
 ## Current checks
 
 All 108 local tests passed on macOS with Node.js 26.8.2, with no skipped tests.
-They cover bridge error handling, external tool naming, attachments, token accounting, subagent registration, Explore settings, conversation actions, Remote Control createAgent routing, exact POSIX process matching and startup after the launching host exits.
+They cover bridge error handling, external tool naming, attachments, token accounting, subagent registration, Explore settings, conversation actions, Remote Control subscription rejection, exact POSIX process matching and startup after the launching host exits.
 Both workbench and runtime patch candidates passed syntax checks and native behavior checks for error/tool-call responses, subagents, queued actions, settings rendering and context display using synthetic inputs.
 Combined-provider regressions parse the generated helpers as ES modules and check MAX selection, Explore model selection and selected parameters for both providers.
 The native runtime budget check also verifies that selected context is capped by the provider's advertised window.
