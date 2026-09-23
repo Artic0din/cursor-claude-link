@@ -7,6 +7,7 @@ The format follows Keep a Changelog.
 
 ### Fixed
 
+- Claude and ChatGPT subscription models on This Mac (Remote Control) now show a clear error pointing to This Mac, instead of failing in Cursor's cloud create RPC with `BAD_MODEL_NAME`. Remote Control agents must be created in the cloud and the cloud cannot reach the local bridge. Cursor-native models, Cloud and Remote Machine targets are unchanged.
 - Added Cursor 3.21.13 support on Apple Silicon with captured original Mac hashes and updated model-picker, routing, usage-card and subagent symbols.
 - Updated native validation to follow the current Responses adapter symbols and the task factory's `availableModels` contract.
 - Kept Claude MAX and Explore helpers separate from GPT helpers so a combined installation produces valid workbench and runtime modules while preserving both providers.
