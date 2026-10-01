@@ -11,7 +11,10 @@ A matching version label alone is insufficient to establish compatibility.
 ## Current checks
 
 On October 1, 2026, the patch installed into a copy of the signature-verified original 3.22.12 app, and `check:runtime`, `check:subagents`, `check:actions` and `check:ui` passed against that copy, as did all unit tests.
-Installation into `/Applications/Cursor.app`, signing and live IDE testing on 3.22.12 are pending; the 3.21.13 results below are historical.
+GPT then Claude were installed into `/Applications/Cursor.app` on 3.22.12 and signed with an Apple Development identity; both bridges started on launch and answered authenticated requests.
+Restore refused to remove GPT before Claude, then Claude and GPT restored all six original hashes with a valid signature; both were reinstalled afterwards.
+In the native IDE, Claude Fastest wrote `claude-smoke.txt` with exactly `CLAUDE_32212_OK\n`, read it back and replied with that content.
+SSH, Agents Window agent runs and live subagent checks remain pending; the 3.21.13 results below are historical.
 
 All 108 local tests passed on macOS with Node.js 26.8.2, with no skipped tests.
 They cover bridge error handling, external tool naming, attachments, token accounting, subagent registration, Explore settings, conversation actions, Remote Control subscription rejection, exact POSIX process matching and startup after the launching host exits.
