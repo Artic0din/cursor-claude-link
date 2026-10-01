@@ -5,6 +5,10 @@ The format follows Keep a Changelog.
 
 ## [Unreleased]
 
+### Added
+
+- Showed subscription usage on the Claude and ChatGPT picker sections, using the window closest to its limit.
+
 ### Fixed
 
 - Claude and ChatGPT subscription models on This Mac (Remote Control) now show a clear error pointing to This Mac, instead of failing in Cursor's cloud create RPC with `BAD_MODEL_NAME`. Remote Control agents must be created in the cloud and the cloud cannot reach the local bridge. Cursor-native models, Cloud and Remote Machine targets are unchanged.
