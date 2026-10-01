@@ -34,8 +34,8 @@ test('missing parent or ToolFormer does not signal a successful creation',()=>{
 });
 
 test('serialized Task-bubble helper emits CLAUDE_PREFIX into the bundle',()=>{
- const anchor='async _waitForParentTaskBubbleIfPossible(e){const t=VK(e.parentConversationId),n=VK(e.toolCallId);if(!t||!n)return;const i=this._composerDataService.getHandleIfLoaded(t);';
- const patched=patchSubagentBubbles(anchor,'desktop','3.21.13');
+ const anchor='async _waitForParentTaskBubbleIfPossible(e){const t=uY(e.parentConversationId),n=uY(e.toolCallId);if(!t||!n)return;const i=this._composerDataService.getHandleIfLoaded(t);';
+ const patched=patchSubagentBubbles(anchor,'desktop','3.22.12');
  assert.match(patched,/var CLAUDE_PREFIX="claude-subscription\/"/);
  const helper=patched.slice(0,patched.indexOf(anchor));
  const isolated=new Function(helper+';return __ensureClaudeTaskBubble')();

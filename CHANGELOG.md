@@ -8,7 +8,7 @@ The format follows Keep a Changelog.
 ### Fixed
 
 - Claude and ChatGPT subscription models on This Mac (Remote Control) now show a clear error pointing to This Mac, instead of failing in Cursor's cloud create RPC with `BAD_MODEL_NAME`. Remote Control agents must be created in the cloud and the cloud cannot reach the local bridge. Cursor-native models, Cloud and Remote Machine targets are unchanged.
-- Added Cursor 3.21.13 support on Apple Silicon with captured original Mac hashes and updated model-picker, routing, usage-card and subagent symbols.
+- Added Cursor 3.22.12 support on Apple Silicon with captured original Mac hashes and updated model-picker, routing, usage-card and subagent symbols.
 - Updated native validation to follow the current Responses adapter symbols and the task factory's `availableModels` contract.
 - Kept Claude MAX and Explore helpers separate from GPT helpers so a combined installation produces valid workbench and runtime modules while preserving both providers.
 - Routed subscription turns through Cursor's existing local execution strategy when Agent Host is enabled, covering new turns, resume and summarization without changing ordinary-model routing.
@@ -35,7 +35,9 @@ The format follows Keep a Changelog.
 
 ### Changed
 
-- Target only Cursor 3.21.13 with verified Mac metadata and one install/restore/write pipeline and symbol-table row.
+- Matched the agent-exec activation and subagent transcript anchors by shape instead of minified name, so a rename-only Cursor build no longer breaks them.
+
+- Target only Cursor 3.22.12 with verified Mac metadata and one install/restore/write pipeline and symbol-table row.
 - Restricted installation to the verified macOS build; unknown versions, commits and file hashes remain rejected.
 - Patched the selected app directly, without requiring a full-app backup.
 - Synced upstream Explore settings, context/MAX, subagent lifecycle and queued follow-up patches, then ported their symbols to the verified Mac build.

@@ -9,20 +9,20 @@ Companion project: [cursor-gpt-link](https://github.com/Artic0din/cursor-gpt-lin
 | Item | Current status |
 | --- | --- |
 | Client platform | macOS 26+ (Apple Silicon, arm64) |
-| Supported Cursor | 3.21.13 (verified original darwin/arm64 hashes) |
-| Cursor commit | `e44a49c17e334d442e58bbde931d791200f014a0` |
+| Supported Cursor | 3.22.12 (verified original darwin/arm64 hashes) |
+| Cursor commit | `3a92974361033b2051526321308c2740fe5912c0` |
 | Node.js used for current validation | 26.8.2 |
 | Claude Code used for current live validation | 2.1.276, using an existing subscription sign-in |
-| macOS signing | Combined 3.21.13 installation, signatures, native loading and manifests verified |
+| macOS signing | Original 3.22.12 download signature verified; patched-app signing and native loading pending |
 | Context and effort | Native Sonnet 5 Medium 1M smoke test passed; large-context workloads remain unverified |
-| IDE | Native Claude file write, readback and final response passed on 3.21.13 |
+| IDE | Native file write and readback passed on 3.21.13; live testing on 3.22.12 is pending |
 | Agents Window | Patch candidates and synthetic native checks passed; live validation pending |
 | Agent Host compatibility | Shared runtime supported; independent runtime temporarily unsupported |
 | Remote SSH | Local inference routing implemented; dedicated Claude SSH testing is still pending |
 | Subscription usage | Settings card implemented; retrieval can be unavailable |
 | Fast and Ultracode | Not implemented |
 
-This fork targets Cursor **3.21.13** only.
+This fork targets Cursor **3.22.12** only.
 Original Mac file hashes were captured from the signed Apple Silicon app and the patch candidates passed syntax and native behavior checks.
 Older Cursor versions are not installation targets.
 Use a local workspace with **This Mac**. Cloud, Remote Machine and **This Mac (Remote Control)** cannot reach these local bridges and remain unsupported.

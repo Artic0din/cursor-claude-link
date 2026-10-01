@@ -26,12 +26,12 @@ test('the retired 3.21.12 build remains unsupported', t => {
   assert.throws(()=>getBuild(root),/Unsupported Cursor version/);
 });
 
-test('the original macOS 3.21.13 build is accepted and another commit is rejected', {skip:process.platform!=='darwin'}, t => {
+test('the original macOS 3.22.12 build is accepted and another commit is rejected', {skip:process.platform!=='darwin'}, t => {
   const root=fs.mkdtempSync(path.join(os.tmpdir(),'claude-current-build-'));
   t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
-  fs.writeFileSync(path.join(root,'package.json'),JSON.stringify({version:'3.21.13'}));
+  fs.writeFileSync(path.join(root,'package.json'),JSON.stringify({version:'3.22.12'}));
   const product=path.join(root,'product.json');
-  fs.writeFileSync(product,JSON.stringify({commit:'e44a49c17e334d442e58bbde931d791200f014a0'}));
+  fs.writeFileSync(product,JSON.stringify({commit:'3a92974361033b2051526321308c2740fe5912c0'}));
   const build=getBuild(root);
   assert.equal(build.platform,'darwin');
   assert.equal(build.arch,'arm64');
@@ -61,7 +61,7 @@ test('combined installation cannot pass the preflight that archives stale Claude
   t.after(()=>{if(previous===undefined)delete process.env.CURSOR_GPT_LINK_HOME;else process.env.CURSOR_GPT_LINK_HOME=previous;fs.rmSync(dir,{recursive:true,force:true});});
   process.env.CURSOR_GPT_LINK_HOME=state;
   fs.mkdirSync(root,{recursive:true});fs.mkdirSync(state);
-  const build=JSON.parse(fs.readFileSync(new URL('./build-3.21.13.json',import.meta.url),'utf8'));
+  const build=JSON.parse(fs.readFileSync(new URL('./build-3.22.12.json',import.meta.url),'utf8'));
   fs.writeFileSync(path.join(root,'package.json'),JSON.stringify({version:build.version}));
   const files=Object.entries(build.files).map(([relative,originalHash])=>{
     const file=path.join(root,relative);
