@@ -16,7 +16,7 @@ Restore refused to remove GPT before Claude, then Claude and GPT restored all si
 In the native IDE, Claude Fastest wrote `claude-smoke.txt` with exactly `CLAUDE_32212_OK\n`, read it back and replied with that content.
 SSH, Agents Window agent runs and live subagent checks remain pending; the 3.21.13 results below are historical.
 
-All 108 local tests passed on macOS with Node.js 26.8.2, with no skipped tests.
+All 117 local tests passed on macOS with Node.js 26.8.2, with no skipped tests.
 They cover bridge error handling, external tool naming, attachments, token accounting, subagent registration, Explore settings, conversation actions, Remote Control subscription rejection, exact POSIX process matching and startup after the launching host exits.
 Both workbench and runtime patch candidates passed syntax checks and native behavior checks for error/tool-call responses, subagents, queued actions, settings rendering and context display using synthetic inputs.
 Combined-provider regressions parse the generated helpers as ES modules and check MAX selection, Explore model selection and selected parameters for both providers.
