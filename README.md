@@ -31,6 +31,8 @@ See [testing notes](docs/testing.md).
 
 The installer checks version, commit, original JavaScript hashes and patch anchors. A matching local ChatGPT installation manifest can identify already patched files. Unknown changes stop installation.
 
+Each subscription section shows Cursor's own usage label, such as "36% used", for the window closest to its limit; the bridge is queried at most once a minute.
+
 The pipeline forwards **Explore Subagent Model** selections, matches native model tooltips, connects context and MAX selection to the runtime budget, cancels active subagents with the parent chat, refreshes subagent transcripts, and forwards queued follow-ups when starting Build. See [Context and MAX mode](docs/model-modes.md).
 When Agent Host uses Cursor's shared workspace runtime, subscription turns use Cursor's existing local execution strategy for new turns, resume and summarization.
 Other models keep the original Agent Host strategy and its settings.
