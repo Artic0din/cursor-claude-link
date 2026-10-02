@@ -13,10 +13,10 @@ Companion project: [cursor-gpt-link](https://github.com/Artic0din/cursor-gpt-lin
 | Cursor commit | `3a92974361033b2051526321308c2740fe5912c0` |
 | Node.js used for current validation | 26.8.2 |
 | Claude Code used for current live validation | 2.1.276, using an existing subscription sign-in |
-| macOS signing | Original 3.22.12 download signature verified; patched-app signing and native loading pending |
+| macOS signing | Installed 3.22.12 signature verified after install and after restore; native loading checked |
 | Context and effort | Native Sonnet 5 Medium 1M smoke test passed; large-context workloads remain unverified |
-| IDE | Native file write and readback passed on 3.21.13; live testing on 3.22.12 is pending |
-| Agents Window | Patch candidates and synthetic native checks passed; live validation pending |
+| IDE | Native Write, Read and final reply passed on 3.22.12 with Claude Fastest |
+| Agents Window | Picker sections, usage labels and the Remote Control error checked live; agent runs pending |
 | Agent Host compatibility | Shared runtime supported; independent runtime temporarily unsupported |
 | Remote SSH | Local inference routing implemented; dedicated Claude SSH testing is still pending |
 | Subscription usage | Settings card implemented; retrieval can be unavailable |
