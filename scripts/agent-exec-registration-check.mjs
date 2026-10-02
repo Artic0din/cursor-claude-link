@@ -1,15 +1,22 @@
 import assert from 'node:assert/strict';
 
+// Cursor rotates the minified names every build; the shape stays fixed.
+// The source may already carry the registration patch, so its wrapper is optional.
 function nativeEntrypoints(source) {
-  const start = source.indexOf('const Fl={');
-  const endMarker = 'async function jl(){Ll&&(Ll=!1,await Nl())}';
-  const end = source.indexOf(endMarker, start);
-  assert.ok(start >= 0 && end > start, 'Native agent-exec activation and cleanup found');
-  return source.slice(start, end + endMarker.length);
+  const head = source.match(/const [\w$]+=\{activate:\(([\w$]+)=\{state:([\w$]+),activate:(?:\(context,options\)=>)?([\w$]+)(?:\(context,\{\.\.\.options,registerAgentExecProvider:true\}\))?,deactivate:([\w$]+)\}\)\.activate/);
+  const tail = source.match(/async function ([\w$]+)\(\)\{([\w$]+)&&\(\2=!1,await [\w$]+\(\)\)\}/);
+  assert.ok(head && tail && tail.index > head.index, 'Native agent-exec activation and cleanup found');
+  const text = source.slice(head.index, tail.index + tail[0].length);
+  const one = (pattern) => { const match = text.match(pattern); assert.ok(match, 'Native entrypoint symbol found: ' + pattern); return match[1]; };
+  const gates = [...text.matchAll(/checkFeatureGate\(([\w$]+)\)/g)].map(match => match[1]);
+  assert.equal(gates.length, 2, 'Move-exec and local-loop gates found');
+  return {text, state: head[2], activate: head[3], deactivate: head[4], moveGate: gates[0], loopGate: gates[1],
+    vscode: one(/([\w$]+)\.cursor\.cursorAgentHostEnabled/), provider: one(/const\{disposeProvider:[\w$]+\}=([\w$]+)\(\{context/),
+    services: one(/\(0,([\w$]+)\.q6\)\(\)/), hostActivate: one(/async function ([\w$]+)\(e\)\{if\([\w$]+\.cursor\.cursorAgentHostEnabled/), hostDeactivate: tail[1]};
 }
 
 export async function verifyAgentExecRegistration(source) {
-  const entrypoints = nativeEntrypoints(source);
+  const entry = nativeEntrypoints(source);
   for (const hostEnabled of [false, true]) for (const moveExec of [false, true, 'reject']) for (const localLoop of [false, true]) {
     const state = {}, activations = [], gateCalls = [], registrations = [];
     let runtime, deactivations = 0, providerRegistered = false, localLoopDisposals = 0;
@@ -32,7 +39,8 @@ export async function verifyAgentExecRegistration(source) {
       assert.equal(receivedContext, context); assert.equal(runtimeExtensionPath, context.extensionPath); assert.equal(serviceCtx, service);
       return {disposeProvider() { localLoopDisposals++; }};
     };
-    const native = new Function('Al', 'ql', 'Nl', 'G', 'El', 'Il', '$a', 'f', entrypoints + ';return {activate:$l,deactivate:jl};')(
+    const native = new Function(entry.state, entry.activate, entry.deactivate, entry.vscode, entry.moveGate, entry.loopGate, entry.provider, entry.services,
+      entry.text + ';return {activate:' + entry.hostActivate + ',deactivate:' + entry.hostDeactivate + '};')(
       state, activate, deactivate, {cursor}, 'move', 'loop', localProvider, {q6: () => service});
     await native.activate(context);
     const independentHost = hostEnabled && (moveExec === true || localLoop);

@@ -2,13 +2,16 @@
 
 ## Verified macOS build
 
-This fork targets Cursor 3.21.13 only.
+This fork targets Cursor 3.22.12 only.
 The six original-file hashes were captured from the signed macOS Apple Silicon application with `scripts/capture-hashes.mjs`.
-The exact Cursor commit is `e44a49c17e334d442e58bbde931d791200f014a0`.
+The exact Cursor commit is `3a92974361033b2051526321308c2740fe5912c0`.
 The minimum supported OS is macOS 26.
 A matching version label alone is insufficient to establish compatibility.
 
 ## Current checks
+
+On October 1, 2026, the patch installed into a copy of the signature-verified original 3.22.12 app, and `check:runtime`, `check:subagents`, `check:actions` and `check:ui` passed against that copy, as did all unit tests.
+Installation into `/Applications/Cursor.app`, signing and live IDE testing on 3.22.12 are pending; the 3.21.13 results below are historical.
 
 All 108 local tests passed on macOS with Node.js 26.8.2, with no skipped tests.
 They cover bridge error handling, external tool naming, attachments, token accounting, subagent registration, Explore settings, conversation actions, Remote Control subscription rejection, exact POSIX process matching and startup after the launching host exits.
@@ -118,7 +121,7 @@ Fast and Ultracode are not implemented.
 The workbench now includes the explicitly selected Explore model in the local runtime catalog when that ID starts with `claude-subscription/`. Foreign Explore IDs stay out of this provider's catalog so the runtime does not send them through the Claude bridge. Previously a same-prefix selection missing from `localProviderAgentModelIds` silently became Inherit. The patch also carries the selected model parameters into the client subagent request and preserves parent parameters for inherited models. Default, Inherit and Disabled continue through Cursor's native resolver.
 
 Unit tests reproduce the missing-catalog fallback.
-The 3.21.13 native task factory receives `availableModels` entries with `modelId` and resolves them internally through catalog entries with `id`; the native check exercises both sides of that contract.
+The 3.22.12 native task factory receives `availableModels` entries with `modelId` and resolves them internally through catalog entries with `id`; the native check exercises both sides of that contract.
 Tooltip tests cover every effort and context variant using the native Markdown layout.
 A live SSH Explore run with a different selected model still needs manual confirmation.
 

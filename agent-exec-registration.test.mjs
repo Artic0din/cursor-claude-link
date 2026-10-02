@@ -16,5 +16,5 @@ test('combined provider installation preserves one native registration patch', (
 });
 
 test('unrecognized native activation contract is rejected before applying patches', () => {
-  assert.throws(() => patchAgentExecRegistration(fixture.replace('activate:ql,deactivate:Nl', 'activate:other,deactivate:Nl')), /anchor/);
+  assert.throws(() => patchAgentExecRegistration(fixture.replace('activate:ql,deactivate:Nl}).activate', 'activate:ql}).activate')), /anchor/);
 });
